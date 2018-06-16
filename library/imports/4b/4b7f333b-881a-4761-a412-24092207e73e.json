@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "Monster_eye_closed",
+    "texture": "39da41c0-43f9-40ed-bfa1-35116ec63285",
+    "atlas": "86770015-ee43-48ea-b4ae-0b543ad5398a",
+    "rect": [
+      440,
+      2,
+      64,
+      4
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      100,
+      100
+    ]
+  }
+}

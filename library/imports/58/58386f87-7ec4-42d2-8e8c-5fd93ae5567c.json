@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "Monster_8_shock_1",
+    "texture": "39da41c0-43f9-40ed-bfa1-35116ec63285",
+    "atlas": "86770015-ee43-48ea-b4ae-0b543ad5398a",
+    "rect": [
+      354,
+      80,
+      84,
+      76
+    ],
+    "offset": [
+      4,
+      -5
+    ],
+    "originalSize": [
+      100,
+      100
+    ]
+  }
+}

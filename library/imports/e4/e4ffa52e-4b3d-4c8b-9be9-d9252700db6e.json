@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "SVAtlas",
+    "texture": "1838fe05-fc67-44ca-9ed4-b434d81b8641",
+    "atlas": "",
+    "rect": [
+      0,
+      0,
+      1000,
+      821
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      1000,
+      821
+    ]
+  }
+}

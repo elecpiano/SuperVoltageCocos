@@ -1,0 +1,110 @@
+{
+  "__type__": "cc.SpriteAtlas",
+  "_name": "MonsterTexture-hd.plist",
+  "_objFlags": 0,
+  "_rawFiles": null,
+  "_spriteFrames": {
+    "Monster_1_angry": {
+      "__uuid__": "a3c4d235-56e5-457d-a46b-2ddf42b911d5"
+    },
+    "Monster_1_normal": {
+      "__uuid__": "67b9d3c6-c5cc-4ff2-91e5-4f37e72626c2"
+    },
+    "Monster_1_shock_1": {
+      "__uuid__": "ef3a8c19-e930-4937-ac6e-5b08c2ebb1eb"
+    },
+    "Monster_1_shock_2": {
+      "__uuid__": "555de938-2df8-4554-9fec-e8a50aec06fd"
+    },
+    "Monster_2_angry": {
+      "__uuid__": "e6fb6cbc-49ce-4f50-a3bd-6410286a7011"
+    },
+    "Monster_2_normal": {
+      "__uuid__": "d6ce1736-0162-465b-8480-19c457b98fd3"
+    },
+    "Monster_2_shock_1": {
+      "__uuid__": "579ebfb1-bcf0-4cb1-b9c7-58d8060d0b26"
+    },
+    "Monster_2_shock_2": {
+      "__uuid__": "06d29dce-ee73-46aa-8dd3-e5ebd5409402"
+    },
+    "Monster_3_angry": {
+      "__uuid__": "24a10ed1-685d-40d1-8a25-00891fa19355"
+    },
+    "Monster_3_normal": {
+      "__uuid__": "1693adc8-d371-42fa-8fad-101f5028363f"
+    },
+    "Monster_3_shock_1": {
+      "__uuid__": "44c07ccb-f006-4706-9cb1-91f071ba15c3"
+    },
+    "Monster_3_shock_2": {
+      "__uuid__": "8f4a123a-2121-48cc-a077-04b3a69506e6"
+    },
+    "Monster_4_angry": {
+      "__uuid__": "7eb4df01-6e43-410d-99a5-8686aecf23ee"
+    },
+    "Monster_4_normal": {
+      "__uuid__": "64d80531-c594-4115-a665-f94ac725c657"
+    },
+    "Monster_4_shock_1": {
+      "__uuid__": "17c58ffd-7efe-4f5c-b11a-41dd0e41e853"
+    },
+    "Monster_4_shock_2": {
+      "__uuid__": "af5b1362-dcc9-48cc-83a9-b0d5493fac26"
+    },
+    "Monster_5_angry": {
+      "__uuid__": "be054c9f-8b95-410d-8b6f-1dbd95139e96"
+    },
+    "Monster_5_normal": {
+      "__uuid__": "a0ed2158-494a-4a85-b724-a13403632034"
+    },
+    "Monster_5_shock_1": {
+      "__uuid__": "c93c868c-d496-43de-8653-b6b04a8b335b"
+    },
+    "Monster_5_shock_2": {
+      "__uuid__": "e8edacd3-cad1-4091-93d5-1e8efa41cecb"
+    },
+    "Monster_6_angry": {
+      "__uuid__": "b4abaf00-41fc-4b0d-8d25-3cc2a6a7c290"
+    },
+    "Monster_6_normal": {
+      "__uuid__": "bc5474bc-5eb5-4940-8d4b-dd130c52e239"
+    },
+    "Monster_6_shock_1": {
+      "__uuid__": "7a4e30d3-fd92-4e06-a8cf-7545d9c4dfba"
+    },
+    "Monster_6_shock_2": {
+      "__uuid__": "5c841d42-2aa0-4392-93ba-99318ef03511"
+    },
+    "Monster_7_angry": {
+      "__uuid__": "37576c6d-9d01-481c-8bf9-d4779519683b"
+    },
+    "Monster_7_normal": {
+      "__uuid__": "83acd5d1-dc8d-449b-8200-8375bb175736"
+    },
+    "Monster_7_shock_1": {
+      "__uuid__": "3198227c-ddfc-488e-93a4-6434fa5e9d08"
+    },
+    "Monster_7_shock_2": {
+      "__uuid__": "70a07067-6e97-4029-9bfa-e7b0e53efcdd"
+    },
+    "Monster_8_angry": {
+      "__uuid__": "20d3f536-4d1a-4e87-8a2b-ecefc5838412"
+    },
+    "Monster_8_normal": {
+      "__uuid__": "6925de96-93f7-41a2-86d5-f7a7c538d876"
+    },
+    "Monster_8_shock_1": {
+      "__uuid__": "58386f87-7ec4-42d2-8e8c-5fd93ae5567c"
+    },
+    "Monster_8_shock_2": {
+      "__uuid__": "115469f8-2191-4e04-9c2f-eea451d8e897"
+    },
+    "Monster_eye_closed": {
+      "__uuid__": "4b7f333b-881a-4761-a412-24092207e73e"
+    },
+    "Monster_eye_open": {
+      "__uuid__": "2c1fdb13-cfc7-4f2a-b357-9415ca01eba4"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "PoleR",
+    "texture": "1838fe05-fc67-44ca-9ed4-b434d81b8641",
+    "atlas": "a0f06e0b-6014-4d5c-af80-e9d31f3b58ad",
+    "rect": [
+      838,
+      624,
+      56,
+      80
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      56,
+      80
+    ]
+  }
+}

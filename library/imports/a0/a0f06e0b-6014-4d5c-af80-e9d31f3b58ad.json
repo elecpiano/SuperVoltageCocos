@@ -1,0 +1,71 @@
+{
+  "__type__": "cc.SpriteAtlas",
+  "_name": "SVAtlas.plist",
+  "_objFlags": 0,
+  "_rawFiles": null,
+  "_spriteFrames": {
+    "BoardBgTile": {
+      "__uuid__": "6663fbca-4772-4ad3-ab28-dbca756c4dc9"
+    },
+    "Bomb": {
+      "__uuid__": "f908515d-366f-4a37-8d11-959393b39d22"
+    },
+    "BombStart": {
+      "__uuid__": "79d2ec54-6bb3-40f5-947b-8248e4234fd9"
+    },
+    "BombStripe": {
+      "__uuid__": "c5033c51-ed3e-41f0-bc51-de6c236aed96"
+    },
+    "Cell_H": {
+      "__uuid__": "d1996119-a13a-4df4-a782-f643fcf6addf"
+    },
+    "Cell_H_Hint": {
+      "__uuid__": "fc217ff2-a788-4a11-baea-71fd4b86d129"
+    },
+    "Cell_I": {
+      "__uuid__": "585b56a5-f4c5-4e68-97db-aa40b4dbec95"
+    },
+    "Cell_I_Hint": {
+      "__uuid__": "5e90fa4d-b673-421e-b72d-89358b5669c9"
+    },
+    "Cell_L": {
+      "__uuid__": "edf81e5d-ad09-42f8-973e-4f94e33faa95"
+    },
+    "Cell_L_Hint": {
+      "__uuid__": "a37ce77c-53f0-42c8-b471-3e315154187f"
+    },
+    "Cell_T": {
+      "__uuid__": "9ece5294-33f9-46a5-8388-37c0f6eaf43c"
+    },
+    "Cell_T_Hint": {
+      "__uuid__": "21cc8cbe-9958-4472-9cf4-783fc0d04e31"
+    },
+    "Cell_X": {
+      "__uuid__": "10e34109-f3b5-48bf-807c-89d220392026"
+    },
+    "Cell_X_Hint": {
+      "__uuid__": "1396dfcc-ca95-43c6-bb90-9b85b3e7f69c"
+    },
+    "Chain": {
+      "__uuid__": "4152fad1-262b-4d55-8582-f577b7ec65db"
+    },
+    "Combo": {
+      "__uuid__": "2ecf59dc-0377-4d6b-a9a5-b65c5b6a04ee"
+    },
+    "EscapeWarning": {
+      "__uuid__": "4f02a9ab-c5b9-4e60-b058-2513e10872b3"
+    },
+    "Lightning_1": {
+      "__uuid__": "c1d4dcb1-f8fa-43e8-b870-24feaea8482b"
+    },
+    "Lightning_2": {
+      "__uuid__": "1b3a6332-089b-49b1-b097-9a88a5371662"
+    },
+    "PoleL": {
+      "__uuid__": "cbd04d95-f8b0-42ae-b8ef-9276bc893419"
+    },
+    "PoleR": {
+      "__uuid__": "c30fbb71-e4c7-48e4-9731-879196233f82"
+    }
+  }
+}

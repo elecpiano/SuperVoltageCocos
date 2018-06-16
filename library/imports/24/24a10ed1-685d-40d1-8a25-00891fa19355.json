@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "Monster_3_angry",
+    "texture": "39da41c0-43f9-40ed-bfa1-35116ec63285",
+    "atlas": "86770015-ee43-48ea-b4ae-0b543ad5398a",
+    "rect": [
+      392,
+      306,
+      80,
+      72
+    ],
+    "offset": [
+      3,
+      -8
+    ],
+    "originalSize": [
+      100,
+      100
+    ]
+  }
+}
