@@ -64,7 +64,7 @@ var CellController = /** @class */ (function (_super) {
         _this.flowAtLeft = null;
         _this.flowAtRight = null;
         //#endregion
-        //#endregion Long Press
+        //#region Long Press
         _this.longpressCounting = false;
         _this.longpressTimespan = 0;
         _this.longpressLevel = 0;

@@ -12,8 +12,8 @@ export default class GiftController extends cc.Component {
     @property(cc.Sprite)
     GiftBody: cc.Sprite = null;
 
-    @property(cc.Sprite)
-    LongpressHint: cc.Sprite = null;
+    // @property(cc.Sprite)
+    // LongpressHint: cc.Sprite = null;
 
     @property(cc.SpriteFrame)
     Lightning_1: cc.SpriteFrame = null;
@@ -34,11 +34,11 @@ export default class GiftController extends cc.Component {
         this._GiftType = type;
         if (type == Enums.GiftType.Lightning) {
             this.GiftBody.spriteFrame = this.Lightning_1;
-            this.LongpressHint.spriteFrame = this.Lightning_1;
+            // this.LongpressHint.spriteFrame = this.Lightning_1;
         }
         else if (type == Enums.GiftType.Bomb) {
             this.GiftBody.spriteFrame = this.Bomb;
-            this.LongpressHint.spriteFrame = this.Bomb;
+            // this.LongpressHint.spriteFrame = this.Bomb;
         }
     }
 
@@ -71,29 +71,6 @@ export default class GiftController extends cc.Component {
         if (this.GiftType == Enums.GiftType.Lightning) {
             this.discard();
         }
-        
-        // var distance_x = (double)(Global.BOARD_COLUMN_COUNT - 1)/2 - this.AttachedToCell.Board_X;
-        // var distance_y = this.AttachedToCell.Board_Y + 1;
-        // var distance = Math.Sqrt(distance_x * distance_x + distance_y * distance_y);
-        // TimeSpan movementDuration = TimeSpan.FromMilliseconds( Global.GIFT_MOVEMENT_DURATION.TotalMilliseconds*distance/3);
-
-        // _Twinkle = PickUpATwinkle();
-
-        // CoreLogic.Gifts.Remove(this);
-
-        // MoveTo(CoreLogic.TopBar.Battery.Position, movementDuration,
-        //     (sender) =>
-        //     {
-        //         AttachedToCell = null;
-        //         ReturnATwinkle(_Twinkle);
-        //         _Twinkle = null;
-        //         this.GamePage.Components.Remove(this);
-
-        //         //Charge
-        //         CoreLogic.TopBar.Battery.Charge(this.ElectricQuantity);
-        //     });
-
-        // PlayGiftCollectionSoundeEffect();
     }
 
     //#endregion
@@ -101,14 +78,17 @@ export default class GiftController extends cc.Component {
     //#region flicker
 
     flicker_fadeout: boolean = true;
+    flicker_stopped: boolean = false;
     flicker(){
         let action: cc.Action = this.flicker_fadeout ? 
                                 cc.fadeTo(Global.GIFT_FLICKER_INTERVAL,64) : 
                                 cc.fadeTo(Global.GIFT_FLICKER_INTERVAL,255);
-        this.node.runAction(action);
+        this.GiftBody.node.runAction(action);
         this.scheduleOnce(
             ()=>{
-                this.flicker();
+                if (!this.flicker_stopped) {
+                    this.flicker();                    
+                }
             },Global.GIFT_FLICKER_INTERVAL);
         this.flicker_fadeout = !this.flicker_fadeout;
     }
@@ -183,7 +163,11 @@ export default class GiftController extends cc.Component {
         this.BombTriggered = true;
         this.GiftBody.spriteFrame = this.BombStart;
         this.GiftBody.node.runAction(
-            cc.scaleTo(Global.GIFT_MOVEMENT_DURATION, 0.5)
+            cc.sequence(
+                cc.scaleTo(Global.BURN_DURATION * 0.3, 1.3),
+                cc.scaleTo(Global.BURN_DURATION * 0.6, 0.5),
+                cc.callFunc(()=>this.node.opacity=0)
+            )
         );
         this.attachedCell.gameBoard.QueueTriggeredBomb(this);
     }
@@ -207,49 +191,30 @@ export default class GiftController extends cc.Component {
 
     longpressHintAction: cc.Action = null;
     longpressHintShown:boolean = false;
-    ShowLongPressHint(){
-        if (this.longpressHintAction == null) {
-            this.longpressHintAction = 
-            cc.sequence(
-                cc.callFunc(()=>{
-                    this.LongpressHint.node.setScale(1);
-                    this.LongpressHint.node.opacity = 255;
-                }),
-                cc.spawn(
-                    cc.fadeOut(Global.GIFT_LONGPRESS_HINT_INTERVAL),
-                    cc.scaleTo(Global.GIFT_LONGPRESS_HINT_INTERVAL, 3)
-                ),
-                cc.callFunc(()=>{
-                    this.LongpressHint.node.setScale(1);
-                    this.LongpressHint.node.opacity = 255;
-                }),
-                cc.spawn(
-                    cc.fadeOut(Global.GIFT_LONGPRESS_HINT_INTERVAL),
-                    cc.scaleTo(Global.GIFT_LONGPRESS_HINT_INTERVAL, 3)
-                )
-            )
-        }
+    longpressFired:boolean = false;
 
-        this.LongpressHint.node.runAction(this.longpressHintAction);
-        this.longpressHintShown = true;
+    ShowLongPressHint(){
+        this.attachedCell.gameBoard.ShowChargeEffect(this.GiftType, this.node.position);
+        this.GiftBody.node.setScale(3);
     }
 
     StopLongPressHint(){
-        if (this.longpressHintShown) {
-            this.LongpressHint.node.stopAction(this.longpressHintAction);            
-        }
-        this.LongpressHint.node.setScale(1);
-        this.LongpressHint.node.opacity = 255;
+        this.attachedCell.gameBoard.HideChargeEffect(this.GiftType);
+        this.GiftBody.node.setScale(1);
     }
 
     LongPressFire(){
+        this.StopLongPressHint();
         if (this.GiftType == Enums.GiftType.Lightning) {
             this.attachedCell.gameBoard.BurnWithLightning(this.attachedCell);            
         }
         else if (this.GiftType == Enums.GiftType.Bomb) {
             this.BombTriggered = true;
+            this.flicker_stopped = true;
+            this.node.opacity = 0;
             this.attachedCell.gameBoard.BombExplode(this);
         }
+        this.longpressFired = true;
     }
 
     //#endregion

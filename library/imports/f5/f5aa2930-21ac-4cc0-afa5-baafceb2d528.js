@@ -74,16 +74,15 @@ var GameBoardController = /** @class */ (function (_super) {
         _this.circuitTree = new Array();
         //#endregion
         //#region Burn
-        /* LightningBurn property is used to distinguish the manual burn (caused by Lightning)
+        /* ManualBurn property is used to distinguish the manual burn (caused by Lightning)
         and natural burn (caused by Cell rotation).
         If it is a Lightning burn, no Combo and Chain is counted. */
-        _this.LightningBurn = false;
+        _this.ManualBurn = false;
         _this.CellBurntByLigntning = null;
         //#endregion
-        //#region Monster
-        _this.Monsters = new Array();
-        //#endregion
         //#region Gift
+        _this.chargeLightning = null;
+        _this.chargeBomb = null;
         _this.GiftQueue = new Array();
         //#endregion
         //#region Chain
@@ -236,7 +235,6 @@ var GameBoardController = /** @class */ (function (_super) {
         }, Global.BURN_DURATION);
     };
     GameBoardController.prototype.tryBombing = function () {
-        console.log("xxx - tryBombing");
         if (this.triggeredBombs.length > 0) {
             var bomb = this.triggeredBombs.pop();
             this.startExplosionAt(bomb);
@@ -317,110 +315,6 @@ var GameBoardController = /** @class */ (function (_super) {
             _loop_1(col);
         }
     };
-    // startDropping_old2(){
-    //     let dropMatrix: number[][] = new Array();
-    //     let dropDelay = 0;
-    //     let thisRowHasDrop = false;
-    //     for (let row = 0; row < Global.BOARD_ROW_COUNT; row++) 
-    //     {
-    //         let rowData = new Array<number>();
-    //         thisRowHasDrop = false;
-    //         for (let col = 0; col < Global.BOARD_COLUMN_COUNT; col++) 
-    //         {
-    //             let cell = this.cellMatrix[row][col];
-    //             if (cell == null){
-    //                 if (row == 0) {
-    //                     rowData.push(1);
-    //                 }
-    //                 else{
-    //                     let valueBelow = dropMatrix[row-1][col];
-    //                     rowData.push(valueBelow + 1);
-    //                 }
-    //             }
-    //             else{
-    //                 if (row == 0) {
-    //                     rowData.push(0);
-    //                 }
-    //                 else{
-    //                     let valueBelow = dropMatrix[row-1][col];
-    //                     rowData.push(valueBelow);
-    //                     // from second row up, try drop
-    //                     let dropCount = dropMatrix[row-1][col];
-    //                     this.dropCell(cell, dropCount, dropDelay);
-    //                     thisRowHasDrop = true;
-    //                 }
-    //             }
-    //         }
-    //         if (thisRowHasDrop) {
-    //             dropDelay++;                
-    //         }
-    //         dropMatrix.push(rowData);
-    //     }
-    //     this.CurrentGameState = Enums.GameState.Dropping;
-    // }
-    // startDropping_old(){
-    //     for (let col = Global.BOARD_COLUMN_COUNT - 1; col >= 0; col--)
-    //     {
-    //         let emptyCellCount = 0;
-    //         for (let row = 0; row < Global.BOARD_ROW_COUNT; row++)
-    //         {
-    //             let cell = this.cellMatrix[row][col];
-    //             if (cell == null)
-    //             {
-    //                 emptyCellCount++;
-    //             }
-    //             else if (emptyCellCount > 0)
-    //             {
-    //                 this.dropCell(cell, emptyCellCount);
-    //             }
-    //         }
-    //     }
-    //     this.CurrentGameState = Enums.GameState.Dropping;
-    // }
-    // dropCell(cell:CellController, emptyCellCount: number, delay: number){
-    //     //reset the status of dropping bubble
-    //     cell.CellState = Enums.CellState.Normal;
-    //     this.droppingCells.push(cell);
-    //     /* The dropping distance equals to the number of empty cells found bellow the cell.
-    //         * In order to understand the relationship between the emptyCellCount and dropping depth,
-    //         * you'd better draw a matrix of cells and do some graphical simulation.*/
-    //     let targetBoardX = cell.Board_X;
-    //     let targetBoardY = cell.Board_Y - emptyCellCount;
-    //     let duration = Global.CELL_DROP_DURATION;
-    //     this.cellMatrix[cell.Board_Y][cell.Board_X] = null;
-    //     this.cellMatrix[targetBoardY][targetBoardX] = cell;
-    //     cell.Board_Y = targetBoardY;
-    //     cell.Board_X = targetBoardX;
-    //     cell.scheduleOnce(()=>{
-    //         cell.node.runAction(
-    //             cc.sequence(
-    //                 cc.moveTo(duration,cell.WhereItShouldBe),
-    //                 cc.callFunc(()=>{
-    //                     this.droppingCells.splice(this.droppingCells.indexOf(cell),1);
-    //                     this.updateDrop( );
-    //                 },cell)
-    //             )
-    //         );
-    //     },delay * Global.CELL_DROP_DELAY);
-    //     if (cell.AttachedMonster != null)
-    //     {
-    //         /*tag bug's dropping status*/
-    //         cell.AttachedMonster.ShouldMoveAround = false;
-    //         cell.scheduleOnce(()=>{
-    //             cell.AttachedMonster.node.runAction(
-    //                 cc.moveTo(duration, cell.WhereItShouldBe)
-    //             );
-    //         },delay * Global.CELL_DROP_DELAY);
-    //     }
-    //     if (cell.AttachedGift != null)
-    //     {
-    //         cell.scheduleOnce(()=>{
-    //             cell.AttachedGift.node.runAction(
-    //                 cc.moveTo(duration, cell.WhereItShouldBe)
-    //             );
-    //         },delay * Global.CELL_DROP_DELAY);
-    //     }
-    // }
     GameBoardController.prototype.updateDrop = function () {
         if (this.CurrentGameState == Enums.GameState.Dropping) {
             if (this.droppingCells.length == 0) {
@@ -470,7 +364,7 @@ var GameBoardController = /** @class */ (function (_super) {
                      * therefore causing this hint detection happen.
                      * That's why we are setting the GameState to Idle when the game
                      * is continued. Please refer to CoreLogic.LoadGameData() method. */
-                    if (!this.LightningBurn) {
+                    if (!this.ManualBurn) {
                         this.ChainCount++;
                     }
                 }
@@ -483,14 +377,15 @@ var GameBoardController = /** @class */ (function (_super) {
     };
     GameBoardController.prototype.processMonster = function () {
         var _this = this;
-        this.LightningBurn = false;
+        var monsterCount = 0;
         /* move existing bugs around using Lower-First principle */
         for (var row = 0; row < Global.BOARD_ROW_COUNT; row++) {
             for (var col = 0; col < Global.BOARD_COLUMN_COUNT; col++) {
                 var cell = this.cellMatrix[row][col];
                 if (cell != null && cell.AttachedMonster != null) {
+                    monsterCount++;
                     var monster = cell.AttachedMonster;
-                    if (monster.ShouldMoveAround) {
+                    if (monster.ShouldMoveAround && !this.ManualBurn) {
                         var escaped = monster.MoveAround();
                         if (!escaped) {
                             this.movingMonsters.push(monster);
@@ -503,11 +398,15 @@ var GameBoardController = /** @class */ (function (_super) {
                 }
             }
         }
-        /* Add new bugs */
-        var newMonsters = this.populateMonsters();
-        for (var _i = 0, newMonsters_1 = newMonsters; _i < newMonsters_1.length; _i++) {
-            var monster = newMonsters_1[_i];
-            this.movingMonsters.push(monster);
+        /* if it is a Lightning Burn, then check if there is any monster
+         on the screen. If yes, then do NOT add new monsters. */
+        if (!(this.ManualBurn && monsterCount > 0)) {
+            /* Add new bugs */
+            var newMonsters = this.populateMonsters();
+            for (var _i = 0, newMonsters_1 = newMonsters; _i < newMonsters_1.length; _i++) {
+                var monster = newMonsters_1[_i];
+                this.movingMonsters.push(monster);
+            }
         }
         var _loop_3 = function (monster) {
             monster.MoveToWhereItShoudBe(function () {
@@ -525,6 +424,7 @@ var GameBoardController = /** @class */ (function (_super) {
             monster.AlreadyMovedAround = false;
         }
         this.CurrentGameState = Enums.GameState.MonsterMoving;
+        this.updateMonsterMoving(); /* in case movingMonsters array is empty */
     };
     GameBoardController.prototype.updateMonsterMoving = function () {
         if (this.CurrentGameState == Enums.GameState.MonsterMoving) {
@@ -570,6 +470,7 @@ var GameBoardController = /** @class */ (function (_super) {
         }
     };
     GameBoardController.prototype.goForNextRound = function () {
+        this.ManualBurn = false;
         this.CurrentGameState = Enums.GameState.Idle;
     };
     GameBoardController.prototype.sparkAt = function (particle, position) {
@@ -846,13 +747,13 @@ var GameBoardController = /** @class */ (function (_super) {
         // (GamePage.Current as GamePage).PlayBurningSoundEffect();
     };
     GameBoardController.prototype.setFireWithLightning = function (cell) {
-        this.LightningBurn = true;
+        this.ManualBurn = true;
         this.CellBurntByLigntning = cell;
         cell.Burn(this.electricEffect, Enums.Direction.Left, null);
     };
     GameBoardController.prototype.stopFire = function () {
         this.electricEffect.ClearFlows();
-        if (this.LightningBurn) {
+        if (this.ManualBurn) {
             var tree = new Array();
             this.getConnectionTree(this.CellBurntByLigntning, tree);
             for (var _i = 0, tree_4 = tree; _i < tree_4.length; _i++) {
@@ -879,6 +780,8 @@ var GameBoardController = /** @class */ (function (_super) {
             this.circuitTree.splice(0, this.circuitTree.length);
         }
     };
+    //#endregion
+    //#region Monster
     GameBoardController.prototype.generateMonsters = function () {
         var monsters = new Array();
         // test
@@ -896,11 +799,6 @@ var GameBoardController = /** @class */ (function (_super) {
             newMonsters = this.initTutorialMonsters();
         }
         else {
-            /* if it is a Lightning Burn, then check if there is any enemy on the screen.
-             * If there is, then do NOT add new enemy. */
-            if (this.LightningBurn && this.Monsters.length > 0) {
-                return;
-            }
             newMonsters = this.generateMonsters();
             //get empty cell in the first row
             var startingLine = new Array();
@@ -935,8 +833,11 @@ var GameBoardController = /** @class */ (function (_super) {
     GameBoardController.prototype.getGifts = function () {
         var gifts = new Array();
         //check for tutorial
+        // // xxx test
+        // this.usePresets = true;
         if (this.usePresets) {
             gifts = this.initTutorialGifts();
+            // this.usePresets = false;
         }
         else {
             gifts = new Array();
@@ -978,7 +879,30 @@ var GameBoardController = /** @class */ (function (_super) {
         return null;
     };
     GameBoardController.prototype.initTutorialGifts = function () {
-        return null;
+        var gifts = new Array();
+        var cellToAttach = this.cellMatrix[3][2];
+        var newGiftNode = cc.instantiate(this.GiftTemplate);
+        this.giftLayer.addChild(newGiftNode);
+        var gift = newGiftNode.getComponent(GiftController_1.default);
+        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gifts.push(gift);
+        return gifts;
+    };
+    GameBoardController.prototype.ShowChargeEffect = function (type, position) {
+        var particle = this.chargeLightning;
+        if (type == Enums.GiftType.Bomb) {
+            particle = this.chargeBomb;
+        }
+        particle.node.setPosition(position.x, position.y);
+        particle.resetSystem();
+    };
+    GameBoardController.prototype.HideChargeEffect = function (type) {
+        if (type == Enums.GiftType.Lightning) {
+            this.chargeLightning.stopSystem();
+        }
+        else if (type == Enums.GiftType.Bomb) {
+            this.chargeBomb.stopSystem();
+        }
     };
     GameBoardController.prototype.tryCongratulateChain = function () {
         if (this.ChainCount <= 0) {
@@ -998,7 +922,6 @@ var GameBoardController = /** @class */ (function (_super) {
         this.triggeredBombs.push(bomb);
     };
     GameBoardController.prototype.startExplosionAt = function (bomb) {
-        console.log("xxx - startExplosionAt");
         this.ExplodingBomb = bomb;
         var bombCell = this.ExplodingBomb.attachedCell;
         this.BombExplosion.Show(bombCell);
@@ -1040,8 +963,7 @@ var GameBoardController = /** @class */ (function (_super) {
         this.monsterKilledInThisBurn++;
     };
     GameBoardController.prototype.tryCongratulateCombo = function () {
-        console.log("xxx - tryCongratulateCombo " + this.monsterKilledInThisBurn.toString());
-        if (!this.LightningBurn) {
+        if (!this.ManualBurn) {
             /* Queue Combo Award */
             if (this.monsterKilledInThisBurn < 2) {
                 this.monsterKilledInThisBurn = 0;
@@ -1131,6 +1053,12 @@ var GameBoardController = /** @class */ (function (_super) {
     __decorate([
         property(cc.ParticleSystem)
     ], GameBoardController.prototype, "sparkleR", void 0);
+    __decorate([
+        property(cc.ParticleSystem)
+    ], GameBoardController.prototype, "chargeLightning", void 0);
+    __decorate([
+        property(cc.ParticleSystem)
+    ], GameBoardController.prototype, "chargeBomb", void 0);
     __decorate([
         property(cc.Label)
     ], GameBoardController.prototype, "Debug_Lable", void 0);

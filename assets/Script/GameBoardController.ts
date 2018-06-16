@@ -137,8 +137,6 @@ export default class GameBoardController extends cc.Component {
     }
 
     tryBombing(){
-        console.log("xxx - tryBombing");
-
         if (this.triggeredBombs.length > 0) {
             let bomb = this.triggeredBombs.pop();
             this.startExplosionAt(bomb);
@@ -227,130 +225,10 @@ export default class GameBoardController extends cc.Component {
                     this.droppingCells.splice(this.droppingCells.indexOf(cell),1);
                     this.updateDrop();
                 });
-
-                
             }
         }
 
     }
-
-    // startDropping_old2(){
-    //     let dropMatrix: number[][] = new Array();
-    //     let dropDelay = 0;
-    //     let thisRowHasDrop = false;
-
-    //     for (let row = 0; row < Global.BOARD_ROW_COUNT; row++) 
-    //     {
-    //         let rowData = new Array<number>();
-    //         thisRowHasDrop = false;
-    //         for (let col = 0; col < Global.BOARD_COLUMN_COUNT; col++) 
-    //         {
-    //             let cell = this.cellMatrix[row][col];
-    //             if (cell == null){
-    //                 if (row == 0) {
-    //                     rowData.push(1);
-    //                 }
-    //                 else{
-    //                     let valueBelow = dropMatrix[row-1][col];
-    //                     rowData.push(valueBelow + 1);
-    //                 }
-    //             }
-    //             else{
-    //                 if (row == 0) {
-    //                     rowData.push(0);
-    //                 }
-    //                 else{
-    //                     let valueBelow = dropMatrix[row-1][col];
-    //                     rowData.push(valueBelow);
-
-    //                     // from second row up, try drop
-    //                     let dropCount = dropMatrix[row-1][col];
-    //                     this.dropCell(cell, dropCount, dropDelay);
-    //                     thisRowHasDrop = true;
-    //                 }
-    //             }
-    //         }
-
-    //         if (thisRowHasDrop) {
-    //             dropDelay++;                
-    //         }
-
-    //         dropMatrix.push(rowData);
-    //     }
-
-    //     this.CurrentGameState = Enums.GameState.Dropping;
-    // }
-
-    // startDropping_old(){
-    //     for (let col = Global.BOARD_COLUMN_COUNT - 1; col >= 0; col--)
-    //     {
-    //         let emptyCellCount = 0;
-    //         for (let row = 0; row < Global.BOARD_ROW_COUNT; row++)
-    //         {
-    //             let cell = this.cellMatrix[row][col];
-    //             if (cell == null)
-    //             {
-    //                 emptyCellCount++;
-    //             }
-    //             else if (emptyCellCount > 0)
-    //             {
-    //                 this.dropCell(cell, emptyCellCount);
-    //             }
-    //         }
-    //     }
-
-    //     this.CurrentGameState = Enums.GameState.Dropping;
-    // }
-
-    // dropCell(cell:CellController, emptyCellCount: number, delay: number){
-    //     //reset the status of dropping bubble
-    //     cell.CellState = Enums.CellState.Normal;
-    //     this.droppingCells.push(cell);
-
-    //     /* The dropping distance equals to the number of empty cells found bellow the cell.
-    //         * In order to understand the relationship between the emptyCellCount and dropping depth,
-    //         * you'd better draw a matrix of cells and do some graphical simulation.*/
-    //     let targetBoardX = cell.Board_X;
-    //     let targetBoardY = cell.Board_Y - emptyCellCount;
-    //     let duration = Global.CELL_DROP_DURATION;
-    //     this.cellMatrix[cell.Board_Y][cell.Board_X] = null;
-    //     this.cellMatrix[targetBoardY][targetBoardX] = cell;
-    //     cell.Board_Y = targetBoardY;
-    //     cell.Board_X = targetBoardX;
-
-    //     cell.scheduleOnce(()=>{
-    //         cell.node.runAction(
-    //             cc.sequence(
-    //                 cc.moveTo(duration,cell.WhereItShouldBe),
-    //                 cc.callFunc(()=>{
-    //                     this.droppingCells.splice(this.droppingCells.indexOf(cell),1);
-    //                     this.updateDrop( );
-    //                 },cell)
-    //             )
-    //         );
-    //     },delay * Global.CELL_DROP_DELAY);
-
-
-    //     if (cell.AttachedMonster != null)
-    //     {
-    //         /*tag bug's dropping status*/
-    //         cell.AttachedMonster.ShouldMoveAround = false;
-    //         cell.scheduleOnce(()=>{
-    //             cell.AttachedMonster.node.runAction(
-    //                 cc.moveTo(duration, cell.WhereItShouldBe)
-    //             );
-    //         },delay * Global.CELL_DROP_DELAY);
-    //     }
-
-    //     if (cell.AttachedGift != null)
-    //     {
-    //         cell.scheduleOnce(()=>{
-    //             cell.AttachedGift.node.runAction(
-    //                 cc.moveTo(duration, cell.WhereItShouldBe)
-    //             );
-    //         },delay * Global.CELL_DROP_DELAY);
-    //     }
-    // }
 
     updateDrop(){
         if (this.CurrentGameState == Enums.GameState.Dropping){
@@ -410,7 +288,7 @@ export default class GameBoardController extends cc.Component {
                      * therefore causing this hint detection happen.
                      * That's why we are setting the GameState to Idle when the game
                      * is continued. Please refer to CoreLogic.LoadGameData() method. */
-                    if (!this.LightningBurn)
+                    if (!this.ManualBurn)
                     {
                         this.ChainCount++;
                     }
@@ -425,7 +303,7 @@ export default class GameBoardController extends cc.Component {
     }
 
     processMonster(){
-        this.LightningBurn = false;
+        let monsterCount:number = 0;
         /* move existing bugs around using Lower-First principle */
         for (let row = 0; row < Global.BOARD_ROW_COUNT; row++)
         {
@@ -434,8 +312,9 @@ export default class GameBoardController extends cc.Component {
                 let cell = this.cellMatrix[row][col];
                 if (cell != null && cell.AttachedMonster != null)
                 {
+                    monsterCount ++;
                     let monster = cell.AttachedMonster;
-                    if (monster.ShouldMoveAround) {
+                    if (monster.ShouldMoveAround && !this.ManualBurn) {
                         let escaped = monster.MoveAround();
                         if (!escaped) {
                             this.movingMonsters.push(monster);                        
@@ -449,14 +328,17 @@ export default class GameBoardController extends cc.Component {
             }
         }
 
-        /* Add new bugs */
-        let newMonsters = this.populateMonsters();
-        for (let monster of newMonsters) {
-            this.movingMonsters.push(monster);
+        /* if it is a Lightning Burn, then check if there is any monster
+         on the screen. If yes, then do NOT add new monsters. */
+        if (!(this.ManualBurn && monsterCount > 0)){
+            /* Add new bugs */
+            let newMonsters = this.populateMonsters();
+            for (let monster of newMonsters) {
+                this.movingMonsters.push(monster);
+            }
         }
-
-        for (let monster of this.movingMonsters)
-        {
+        
+        for (let monster of this.movingMonsters) {
             monster.MoveToWhereItShoudBe(
                 ()=>{
                     this.movingMonsters.splice(this.movingMonsters.indexOf(monster),1);
@@ -471,6 +353,7 @@ export default class GameBoardController extends cc.Component {
         }
 
         this.CurrentGameState = Enums.GameState.MonsterMoving;
+        this.updateMonsterMoving();/* in case movingMonsters array is empty */
     }
 
     updateMonsterMoving(){
@@ -519,6 +402,7 @@ export default class GameBoardController extends cc.Component {
     }
 
     goForNextRound(){
+        this.ManualBurn = false;
         this.CurrentGameState = Enums.GameState.Idle; 
     }
 
@@ -902,10 +786,11 @@ export default class GameBoardController extends cc.Component {
 
     //#region Burn
 
-    /* LightningBurn property is used to distinguish the manual burn (caused by Lightning) 
+    /* ManualBurn property is used to distinguish the manual burn (caused by Lightning) 
     and natural burn (caused by Cell rotation).
     If it is a Lightning burn, no Combo and Chain is counted. */
-    LightningBurn: boolean = false;
+    
+    ManualBurn: boolean = false;
     CellBurntByLigntning: CellController = null;
 
     setFire(tree: Array<CellController>){
@@ -924,7 +809,7 @@ export default class GameBoardController extends cc.Component {
     }
 
     setFireWithLightning(cell: CellController){
-        this.LightningBurn = true;
+        this.ManualBurn = true;
         this.CellBurntByLigntning = cell;
         cell.Burn(this.electricEffect, Enums.Direction.Left, null);
     }
@@ -932,7 +817,7 @@ export default class GameBoardController extends cc.Component {
     stopFire(){
         this.electricEffect.ClearFlows();
 
-        if (this.LightningBurn) {
+        if (this.ManualBurn) {
             let tree = new Array<CellController>();
             this.getConnectionTree(this.CellBurntByLigntning, tree);
             for (let cell of tree) {
@@ -963,8 +848,6 @@ export default class GameBoardController extends cc.Component {
 
     //#region Monster
 
-    Monsters: Array<MonsterController> = new Array<MonsterController>();
-
     generateMonsters():Array<MonsterController>{
         let monsters = new Array<MonsterController>();
 
@@ -988,13 +871,6 @@ export default class GameBoardController extends cc.Component {
         }
         else
         {
-            /* if it is a Lightning Burn, then check if there is any enemy on the screen.
-             * If there is, then do NOT add new enemy. */
-            if (this.LightningBurn && this.Monsters.length>0)
-            {
-                return;
-            }
-
             newMonsters = this.generateMonsters();
 
             //get empty cell in the first row
@@ -1049,15 +925,24 @@ export default class GameBoardController extends cc.Component {
 
     //#region Gift
 
+    @property(cc.ParticleSystem)
+    chargeLightning: cc.ParticleSystem = null;
+
+    @property(cc.ParticleSystem)
+    chargeBomb: cc.ParticleSystem = null;
+
     GiftQueue:Array<Enums.GiftType> = new Array<Enums.GiftType>();
 
     getGifts():Array<GiftController>{
         let gifts = new Array<GiftController>();
 
         //check for tutorial
+        // // xxx test
+        // this.usePresets = true;
         if (this.usePresets)
         {
             gifts = this.initTutorialGifts();
+            // this.usePresets = false;
         }
         else
         {
@@ -1110,7 +995,34 @@ export default class GameBoardController extends cc.Component {
     }
 
     initTutorialGifts():Array<GiftController>{
-        return null;
+        let gifts = new Array<GiftController>();
+
+        let cellToAttach = this.cellMatrix[3][2];
+        let newGiftNode = cc.instantiate(this.GiftTemplate);
+        this.giftLayer.addChild(newGiftNode);
+        let gift = newGiftNode.getComponent(GiftController);
+        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gifts.push(gift);
+
+        return gifts;
+    }
+
+    ShowChargeEffect(type:Enums.GiftType, position: cc.Vec2){
+
+        let particle:cc.ParticleSystem = this.chargeLightning;
+        if (type == Enums.GiftType.Bomb) {
+            particle = this.chargeBomb;
+        }
+        particle.node.setPosition(position.x, position.y);
+        particle.resetSystem();
+    }
+
+    HideChargeEffect(type:Enums.GiftType){
+        if (type == Enums.GiftType.Lightning) {
+            this.chargeLightning.stopSystem();
+        }else if (type == Enums.GiftType.Bomb) {
+            this.chargeBomb.stopSystem();
+        }
     }
 
     //#endregion
@@ -1146,8 +1058,8 @@ export default class GameBoardController extends cc.Component {
 
     bombedCells: CellController[] = new Array<CellController>();
     ExplodingBomb: GiftController = null;
+
     startExplosionAt(bomb: GiftController) {
-        console.log("xxx - startExplosionAt");
         this.ExplodingBomb = bomb;
         let bombCell: CellController = this.ExplodingBomb.attachedCell;
         this.BombExplosion.Show(bombCell);
@@ -1204,9 +1116,7 @@ export default class GameBoardController extends cc.Component {
     }
 
     tryCongratulateCombo(){
-        console.log("xxx - tryCongratulateCombo "+ this.monsterKilledInThisBurn.toString());
-
-        if (!this.LightningBurn) {
+        if (!this.ManualBurn) {
             /* Queue Combo Award */
             if (this.monsterKilledInThisBurn <2){
                 this.monsterKilledInThisBurn = 0;

@@ -12,25 +12,35 @@ var BombExplosionController = /** @class */ (function (_super) {
         _this.ExplosionV = null;
         _this.ExplosionAudio = null;
         _this.flash_count = 0;
-        _this.BOMB_FLASH_SCALE = 0.9;
+        _this.BOMB_FLASH_SCALE = 0.8;
         _this.BOMB_FLASH_INTERVAL = 0.05;
-        // BOMB_FLASH_COUNT_MAX:number = 10;
+        _this.falsh_elapse_time = 0;
         _this.flashing = false;
         return _this;
     }
     BombExplosionController.prototype.onLoad = function () {
-        this.ExplosionH.enabled = false;
-        this.ExplosionV.enabled = false;
+        // this.ExplosionH.enabled = false;
+        // this.ExplosionV.enabled = false;
+        this.node.opacity = 0;
+    };
+    BombExplosionController.prototype.update = function (dt) {
+        if (this.flashing) {
+            this.falsh_elapse_time += dt;
+            if (this.falsh_elapse_time > this.BOMB_FLASH_INTERVAL) {
+                this.flashNew();
+                this.falsh_elapse_time = 0;
+            }
+        }
     };
     BombExplosionController.prototype.Show = function (cell) {
-        console.log("xxx - BombExplosion.Show ");
-        this.ExplosionH.enabled = true;
-        this.ExplosionV.enabled = true;
+        // this.ExplosionH.enabled = true;
+        // this.ExplosionV.enabled = true;
+        this.node.opacity = 255;
         this.ExplosionH.node.setPosition(320, cell.node.position.y);
         this.ExplosionV.node.setPosition(cell.node.position.x, 480);
         this.flash_count = 0;
         this.flashing = true;
-        this.flash();
+        // this.flash();
         this.ExplosionAudio.play();
     };
     BombExplosionController.prototype.flash = function () {
@@ -39,7 +49,7 @@ var BombExplosionController = /** @class */ (function (_super) {
             this.flash_count++;
             var scale = (this.flash_count % 2) == 0 ? 1 : this.BOMB_FLASH_SCALE;
             this.ExplosionH.node.scaleY = scale;
-            this.ExplosionV.node.scaleX = scale;
+            this.ExplosionV.node.scaleY = scale;
             this.scheduleOnce(function () {
                 _this.flash();
             }, this.BOMB_FLASH_INTERVAL);
@@ -49,10 +59,17 @@ var BombExplosionController = /** @class */ (function (_super) {
         //     this.Hide();
         // }
     };
+    BombExplosionController.prototype.flashNew = function () {
+        this.flash_count++;
+        var scale = (this.flash_count % 2) == 0 ? 1 : this.BOMB_FLASH_SCALE;
+        this.ExplosionH.node.scaleY = scale;
+        this.ExplosionV.node.scaleY = scale;
+    };
     BombExplosionController.prototype.Hide = function () {
         this.flashing = false;
-        this.ExplosionH.enabled = false;
-        this.ExplosionV.enabled = false;
+        this.node.opacity = 0;
+        // this.ExplosionH.enabled = false;
+        // this.ExplosionV.enabled = false;
     };
     __decorate([
         property(cc.Sprite)

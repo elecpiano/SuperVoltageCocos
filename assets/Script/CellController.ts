@@ -703,7 +703,7 @@ export default class CellController extends cc.Component {
 
     //#endregion
 
-    //#endregion Long Press
+    //#region Long Press
 
     longpressCounting:boolean = false;
     longpressTimespan:number = 0;

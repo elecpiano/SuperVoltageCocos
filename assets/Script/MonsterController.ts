@@ -246,7 +246,6 @@ export default class MonsterController extends cc.Component {
         );
     }
 
-
     /* DO NOT directly attach the monster to target cell here, 
     because it may cause redundant MoveAround() call on the same monster 
     by processMonster() method in the GameBoardController.
@@ -576,7 +575,7 @@ export default class MonsterController extends cc.Component {
             )
             ));
         
-        if (!this.gameBoard.LightningBurn 
+        if (!this.gameBoard.ManualBurn 
             && this.gameBoard.CurrentGameState != Enums.GameState.Bombing)
         {
             this.gameBoard.CountMonsterKill();

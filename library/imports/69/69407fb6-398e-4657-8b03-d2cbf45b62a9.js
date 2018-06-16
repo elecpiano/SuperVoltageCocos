@@ -12,7 +12,8 @@ var GiftController = /** @class */ (function (_super) {
         //#region Properties
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this.GiftBody = null;
-        _this.LongpressHint = null;
+        // @property(cc.Sprite)
+        // LongpressHint: cc.Sprite = null;
         _this.Lightning_1 = null;
         _this.Lightning_2 = null;
         _this.Bomb = null;
@@ -22,6 +23,7 @@ var GiftController = /** @class */ (function (_super) {
         //#endregion
         //#region flicker
         _this.flicker_fadeout = true;
+        _this.flicker_stopped = false;
         //#endregion
         //#region Cell Attachment
         _this.attachedCell = null;
@@ -36,6 +38,7 @@ var GiftController = /** @class */ (function (_super) {
         //#endregion Long Press
         _this.longpressHintAction = null;
         _this.longpressHintShown = false;
+        _this.longpressFired = false;
         return _this;
         //#endregion
     }
@@ -47,11 +50,11 @@ var GiftController = /** @class */ (function (_super) {
             this._GiftType = type;
             if (type == Enums.GiftType.Lightning) {
                 this.GiftBody.spriteFrame = this.Lightning_1;
-                this.LongpressHint.spriteFrame = this.Lightning_1;
+                // this.LongpressHint.spriteFrame = this.Lightning_1;
             }
             else if (type == Enums.GiftType.Bomb) {
                 this.GiftBody.spriteFrame = this.Bomb;
-                this.LongpressHint.spriteFrame = this.Bomb;
+                // this.LongpressHint.spriteFrame = this.Bomb;
             }
         },
         enumerable: true,
@@ -76,32 +79,17 @@ var GiftController = /** @class */ (function (_super) {
         if (this.GiftType == Enums.GiftType.Lightning) {
             this.discard();
         }
-        // var distance_x = (double)(Global.BOARD_COLUMN_COUNT - 1)/2 - this.AttachedToCell.Board_X;
-        // var distance_y = this.AttachedToCell.Board_Y + 1;
-        // var distance = Math.Sqrt(distance_x * distance_x + distance_y * distance_y);
-        // TimeSpan movementDuration = TimeSpan.FromMilliseconds( Global.GIFT_MOVEMENT_DURATION.TotalMilliseconds*distance/3);
-        // _Twinkle = PickUpATwinkle();
-        // CoreLogic.Gifts.Remove(this);
-        // MoveTo(CoreLogic.TopBar.Battery.Position, movementDuration,
-        //     (sender) =>
-        //     {
-        //         AttachedToCell = null;
-        //         ReturnATwinkle(_Twinkle);
-        //         _Twinkle = null;
-        //         this.GamePage.Components.Remove(this);
-        //         //Charge
-        //         CoreLogic.TopBar.Battery.Charge(this.ElectricQuantity);
-        //     });
-        // PlayGiftCollectionSoundeEffect();
     };
     GiftController.prototype.flicker = function () {
         var _this = this;
         var action = this.flicker_fadeout ?
             cc.fadeTo(Global.GIFT_FLICKER_INTERVAL, 64) :
             cc.fadeTo(Global.GIFT_FLICKER_INTERVAL, 255);
-        this.node.runAction(action);
+        this.GiftBody.node.runAction(action);
         this.scheduleOnce(function () {
-            _this.flicker();
+            if (!_this.flicker_stopped) {
+                _this.flicker();
+            }
         }, Global.GIFT_FLICKER_INTERVAL);
         this.flicker_fadeout = !this.flicker_fadeout;
     };
@@ -143,12 +131,13 @@ var GiftController = /** @class */ (function (_super) {
         this.flicker();
     };
     GiftController.prototype.TriggerAsBomb = function () {
+        var _this = this;
         if (this.BombTriggered) {
             return;
         }
         this.BombTriggered = true;
         this.GiftBody.spriteFrame = this.BombStart;
-        this.GiftBody.node.runAction(cc.scaleTo(Global.GIFT_MOVEMENT_DURATION, 0.5));
+        this.GiftBody.node.runAction(cc.sequence(cc.scaleTo(Global.BURN_DURATION * 0.3, 1.3), cc.scaleTo(Global.BURN_DURATION * 0.6, 0.5), cc.callFunc(function () { return _this.node.opacity = 0; })));
         this.attachedCell.gameBoard.QueueTriggeredBomb(this);
     };
     //#endregion
@@ -158,42 +147,29 @@ var GiftController = /** @class */ (function (_super) {
         this.node.runAction(cc.sequence(cc.scaleTo(Global.GIFT_MOVEMENT_DURATION, 0), cc.callFunc(function () { return _this.Remove(); })));
     };
     GiftController.prototype.ShowLongPressHint = function () {
-        var _this = this;
-        if (this.longpressHintAction == null) {
-            this.longpressHintAction =
-                cc.sequence(cc.callFunc(function () {
-                    _this.LongpressHint.node.setScale(1);
-                    _this.LongpressHint.node.opacity = 255;
-                }), cc.spawn(cc.fadeOut(Global.GIFT_LONGPRESS_HINT_INTERVAL), cc.scaleTo(Global.GIFT_LONGPRESS_HINT_INTERVAL, 3)), cc.callFunc(function () {
-                    _this.LongpressHint.node.setScale(1);
-                    _this.LongpressHint.node.opacity = 255;
-                }), cc.spawn(cc.fadeOut(Global.GIFT_LONGPRESS_HINT_INTERVAL), cc.scaleTo(Global.GIFT_LONGPRESS_HINT_INTERVAL, 3)));
-        }
-        this.LongpressHint.node.runAction(this.longpressHintAction);
-        this.longpressHintShown = true;
+        this.attachedCell.gameBoard.ShowChargeEffect(this.GiftType, this.node.position);
+        this.GiftBody.node.setScale(3);
     };
     GiftController.prototype.StopLongPressHint = function () {
-        if (this.longpressHintShown) {
-            this.LongpressHint.node.stopAction(this.longpressHintAction);
-        }
-        this.LongpressHint.node.setScale(1);
-        this.LongpressHint.node.opacity = 255;
+        this.attachedCell.gameBoard.HideChargeEffect(this.GiftType);
+        this.GiftBody.node.setScale(1);
     };
     GiftController.prototype.LongPressFire = function () {
+        this.StopLongPressHint();
         if (this.GiftType == Enums.GiftType.Lightning) {
             this.attachedCell.gameBoard.BurnWithLightning(this.attachedCell);
         }
         else if (this.GiftType == Enums.GiftType.Bomb) {
             this.BombTriggered = true;
+            this.flicker_stopped = true;
+            this.node.opacity = 0;
             this.attachedCell.gameBoard.BombExplode(this);
         }
+        this.longpressFired = true;
     };
     __decorate([
         property(cc.Sprite)
     ], GiftController.prototype, "GiftBody", void 0);
-    __decorate([
-        property(cc.Sprite)
-    ], GiftController.prototype, "LongpressHint", void 0);
     __decorate([
         property(cc.SpriteFrame)
     ], GiftController.prototype, "Lightning_1", void 0);

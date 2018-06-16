@@ -26,9 +26,9 @@
 
     export const CONGRATULATE_DURATION = 0.5;
     export const GIFT_MOVEMENT_DURATION = 0.3;
-    export const GIFT_LONGPRESS_HINT_INTERVAL = 0.5;
+    export const GIFT_LONGPRESS_HINT_INTERVAL = 0.2;
     export const GIFT_LONGPRESS_DURATION = 2;
-    export const GIFT_LONGPRESS_THESHOLD = 1;
+    export const GIFT_LONGPRESS_THESHOLD = 0.6;
     export const GIFT_FLICKER_INTERVAL = 0.7;
     export const BOMB_DURATION  = 1;
 

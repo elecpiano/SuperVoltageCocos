@@ -450,7 +450,7 @@ var MonsterController = /** @class */ (function (_super) {
             _this.node.parent.removeChild(_this.node);
             // this.node.destroy();
         })));
-        if (!this.gameBoard.LightningBurn
+        if (!this.gameBoard.ManualBurn
             && this.gameBoard.CurrentGameState != Enums.GameState.Bombing) {
             this.gameBoard.CountMonsterKill();
         }
