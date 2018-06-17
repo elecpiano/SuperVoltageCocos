@@ -578,8 +578,7 @@ export default class MonsterController extends cc.Component {
             )
             ));
         
-        if (this.gameBoard.CellBurntByLigntning == null 
-            && this.gameBoard.CurrentGameState != Enums.GameState.Bombing)
+        if (!this.gameBoard.WeaponUsed)
         {
             this.gameBoard.CountMonsterKill();
         }
@@ -615,7 +614,7 @@ export default class MonsterController extends cc.Component {
     CheckGiftCollision() : boolean {
         let collisionHappened:boolean = false;
         if (this.attachedCell.AttachedGift != null) {
-            this.attachedCell.AttachedGift.MonsterCollide();
+            // this.attachedCell.AttachedGift.MonsterCollide();
             collisionHappened = true;
         }
         return collisionHappened;

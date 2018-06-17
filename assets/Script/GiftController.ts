@@ -74,7 +74,7 @@ export default class GiftController extends cc.Component {
             this.attachedCell.gameBoard.ManuallyExplode(this);   
             // this.TriggerAsBomb();         
         }else if (this.GiftType == Enums.GiftType.Lightning) {
-            this.attachedCell.gameBoard.ManuallyBurn(this.attachedCell);            
+            this.attachedCell.gameBoard.ManuallyBurn([this.attachedCell]);
         }
     }
 
@@ -209,7 +209,7 @@ export default class GiftController extends cc.Component {
     LongPressFire(){
         this.StopLongPressHint();
         if (this.GiftType == Enums.GiftType.Lightning) {
-            this.attachedCell.gameBoard.ManuallyBurn(this.attachedCell);            
+            this.attachedCell.gameBoard.ManuallyBurn([this.attachedCell]);
         }
         else if (this.GiftType == Enums.GiftType.Bomb) {
             this.BombTriggered = true;

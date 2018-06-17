@@ -121,9 +121,9 @@ export default class GameBoardController extends cc.Component {
         this.updateBurn();
     }
 
-    ManuallyBurn(cell: CellController){
+    ManuallyBurn(cells: CellController[]){
         this.CurrentGameState = Enums.GameState.Burning;
-        this.setFireWithLightning(cell);
+        this.setFireManually(cells);
         this.updateBurn();
     }
 
@@ -282,8 +282,8 @@ export default class GameBoardController extends cc.Component {
                     /* this may also happens unexpectedly:
                      * When the game quits during the GameState.Burning state, 
                      * all the cell state is saved. And when the game is continued, 
-                     * the Burning state causes successively UpdateBurning(...), StartDropping(...),
-                     * UpdateDrop(...), StartFilling(...) and UpdateFill(...). Because there is actually
+                     * the Burning state causes successively Update-Burning(...), Start-Dropping(...),
+                     * Update-Drop(...), Start-Filling(...) and Update-Fill(...). Because there is actually
                      * no cells to drop and fill, these methods are executed really fast, 
                      * therefore causing this hint detection happen.
                      * That's why we are setting the GameState to Idle when the game
@@ -365,15 +365,36 @@ export default class GameBoardController extends cc.Component {
     }
 
     checkMonsterGiftCollision(){
+        let collisionHappened:boolean = false;
+        let bombCollisionCells: CellController[] =  new Array();
+        let lightningCollisionCells: CellController[] =  new Array();
+
         for (let monster of this.monstersOnBoard) {
-            monster.CheckGiftCollision();
-            // if (monster.CheckGiftCollision()) {
-            //     this.checkTriggeredBomb();
-            //     // return;
-            // }
+            let collision = monster.CheckGiftCollision();
+            if (collision) {
+                if (monster.attachedCell.AttachedGift.GiftType == Enums.GiftType.Bomb) {
+                    bombCollisionCells.push(monster.attachedCell);
+                }
+                else if (monster.attachedCell.AttachedGift.GiftType == Enums.GiftType.Lightning) {
+                    lightningCollisionCells.push(monster.attachedCell);
+                }
+                collisionHappened = true;
+            }
         }
 
-        this.checkGameOver();            
+        if (bombCollisionCells.length > 0) {
+            for (let cell of bombCollisionCells) {
+                cell.AttachedGift.TriggerAsBomb();                
+            }
+            this.checkTriggeredBomb();
+        }
+        else if (lightningCollisionCells.length > 0) {
+            this.ManuallyBurn(lightningCollisionCells);
+
+        }
+        else {
+            this.checkGameOver();
+        }
     }
 
     checkGameOver(){
@@ -802,9 +823,12 @@ export default class GameBoardController extends cc.Component {
     /* If weapon is used for burning or bombing, no Combo and Chain is counted. */
     
     WeaponUsed: boolean = false;
-    CellBurntByLigntning: CellController = null;
+    // CellBurntByLigntning: CellController = null;
+    CellsBurntManually: CellController[] = new Array();
+    ManualBurn:boolean = false;
 
     setFire(tree: Array<CellController>){
+        this.ManualBurn = false;
         for (let cell of tree)
         {
             if (cell.Board_X == 0 && cell.LeftAntenna)//there must be at leat one cell connected to left power (or right power)
@@ -819,28 +843,33 @@ export default class GameBoardController extends cc.Component {
         // (GamePage.Current as GamePage).PlayBurningSoundEffect();
     }
 
-    setFireWithLightning(cell: CellController){
+    setFireManually(cells: CellController[]){
+        this.ManualBurn = true;
         this.WeaponUsed = true;
-        this.CellBurntByLigntning = cell;
-        cell.Burn(this.electricEffect, Enums.Direction.Left, null);
+        for (let cell of cells) {
+            this.CellsBurntManually.push(cell);
+            cell.Burn(this.electricEffect, Enums.Direction.Left, null);
+        }
+        // this.CellBurntByLigntning = cell;
     }
 
     stopFire(){
         this.electricEffect.ClearFlows();
 
-        if (this.CellBurntByLigntning != null) {
-            let tree = new Array<CellController>();
-            this.getConnectionTree(this.CellBurntByLigntning, tree);
-            for (let cell of tree) {
-                let toRemove = cell.GetBurnt();
-                if (toRemove) {
-                    this.freeCells.push(cell);
-                    this.cellMatrix[cell.Board_Y][cell.Board_X] = null;
-                    cell.GetReadyForShow();
+        if (this.CellsBurntManually.length > 0) {
+            while (this.CellsBurntManually.length > 0) {
+                let cell = this.CellsBurntManually.pop();
+                let tree = new Array<CellController>();
+                this.getConnectionTree(cell, tree);
+                for (let cell of tree) {
+                    let toRemove = cell.GetBurnt();
+                    if (toRemove) {
+                        this.freeCells.push(cell);
+                        this.cellMatrix[cell.Board_Y][cell.Board_X] = null;
+                        cell.GetReadyForShow();
+                    }
                 }
             }
-
-            this.CellBurntByLigntning = null;
         }
         else{
             for (let cell of this.circuitTree) {
@@ -853,6 +882,8 @@ export default class GameBoardController extends cc.Component {
             }
             this.circuitTree.splice(0, this.circuitTree.length);
         }
+
+        this.ManualBurn = false;
     }
 
     //#endregion
@@ -1018,35 +1049,35 @@ export default class GameBoardController extends cc.Component {
         newGiftNode = cc.instantiate(this.GiftTemplate);
         this.giftLayer.addChild(newGiftNode);
         gift = newGiftNode.getComponent(GiftController);
-        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gift.Init(Enums.GiftType.Lightning, cellToAttach);
         gifts.push(gift);
 
         cellToAttach = this.cellMatrix[6][1];
         newGiftNode = cc.instantiate(this.GiftTemplate);
         this.giftLayer.addChild(newGiftNode);
         gift = newGiftNode.getComponent(GiftController);
-        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gift.Init(Enums.GiftType.Lightning, cellToAttach);
         gifts.push(gift);
 
         cellToAttach = this.cellMatrix[6][2];
         newGiftNode = cc.instantiate(this.GiftTemplate);
         this.giftLayer.addChild(newGiftNode);
         gift = newGiftNode.getComponent(GiftController);
-        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gift.Init(Enums.GiftType.Lightning, cellToAttach);
         gifts.push(gift);
 
         cellToAttach = this.cellMatrix[6][3];
         newGiftNode = cc.instantiate(this.GiftTemplate);
         this.giftLayer.addChild(newGiftNode);
         gift = newGiftNode.getComponent(GiftController);
-        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gift.Init(Enums.GiftType.Lightning, cellToAttach);
         gifts.push(gift);
 
         cellToAttach = this.cellMatrix[6][4];
         newGiftNode = cc.instantiate(this.GiftTemplate);
         this.giftLayer.addChild(newGiftNode);
         gift = newGiftNode.getComponent(GiftController);
-        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gift.Init(Enums.GiftType.Lightning, cellToAttach);
         gifts.push(gift);
 
         return gifts;
