@@ -33,7 +33,7 @@ var GameBoardController = /** @class */ (function (_super) {
         _this.monsters = null;
         _this.CurrentRoundEnemyKill = 0;
         _this.CurrentlyTouchedCell = null;
-        _this.usePresets = false;
+        _this.usePresets = true; //xxx test
         _this.escapedMonsterCount = 0;
         //#endregion
         //#region Game State
@@ -74,11 +74,12 @@ var GameBoardController = /** @class */ (function (_super) {
         _this.circuitTree = new Array();
         //#endregion
         //#region Burn
-        /* ManualBurn property is used to distinguish the manual burn (caused by Lightning)
-        and natural burn (caused by Cell rotation).
-        If it is a Lightning burn, no Combo and Chain is counted. */
-        _this.ManualBurn = false;
+        /* If weapon is used for burning or bombing, no Combo and Chain is counted. */
+        _this.WeaponUsed = false;
         _this.CellBurntByLigntning = null;
+        //#endregion
+        //#region Monster
+        _this.monstersOnBoard = new Array();
         //#endregion
         //#region Gift
         _this.chargeLightning = null;
@@ -221,7 +222,7 @@ var GameBoardController = /** @class */ (function (_super) {
         this.setFire(this.circuitTree);
         this.updateBurn();
     };
-    GameBoardController.prototype.BurnWithLightning = function (cell) {
+    GameBoardController.prototype.ManuallyBurn = function (cell) {
         this.CurrentGameState = Enums.GameState.Burning;
         this.setFireWithLightning(cell);
         this.updateBurn();
@@ -231,10 +232,15 @@ var GameBoardController = /** @class */ (function (_super) {
         this.scheduleOnce(function () {
             _this.stopFire();
             _this.tryCongratulateCombo();
-            _this.tryBombing();
+            _this.checkTriggeredBomb();
         }, Global.BURN_DURATION);
     };
-    GameBoardController.prototype.tryBombing = function () {
+    GameBoardController.prototype.ManuallyExplode = function (bomb) {
+        this.startExplosionAt(bomb);
+        this.CurrentGameState = Enums.GameState.Bombing;
+        this.UpdateBombing();
+    };
+    GameBoardController.prototype.checkTriggeredBomb = function () {
         if (this.triggeredBombs.length > 0) {
             var bomb = this.triggeredBombs.pop();
             this.startExplosionAt(bomb);
@@ -245,16 +251,11 @@ var GameBoardController = /** @class */ (function (_super) {
             this.startDropping();
         }
     };
-    GameBoardController.prototype.BombExplode = function (bomb) {
-        this.startExplosionAt(bomb);
-        this.CurrentGameState = Enums.GameState.Bombing;
-        this.UpdateBombing();
-    };
     GameBoardController.prototype.UpdateBombing = function () {
         var _this = this;
         this.scheduleOnce(function () {
             _this.stopExplosion();
-            _this.tryBombing(); /* a bomb explosion may trigger another bomb, so let's check again */
+            _this.checkTriggeredBomb(); /* a bomb explosion may trigger another bomb, so let's check again */
         }, Global.BOMB_DURATION);
     };
     GameBoardController.prototype.startDropping = function () {
@@ -364,7 +365,7 @@ var GameBoardController = /** @class */ (function (_super) {
                      * therefore causing this hint detection happen.
                      * That's why we are setting the GameState to Idle when the game
                      * is continued. Please refer to CoreLogic.LoadGameData() method. */
-                    if (!this.ManualBurn) {
+                    if (!this.WeaponUsed) {
                         this.ChainCount++;
                     }
                 }
@@ -385,7 +386,7 @@ var GameBoardController = /** @class */ (function (_super) {
                 if (cell != null && cell.AttachedMonster != null) {
                     monsterCount++;
                     var monster = cell.AttachedMonster;
-                    if (monster.ShouldMoveAround && !this.ManualBurn) {
+                    if (monster.ShouldMoveAround && !this.WeaponUsed) {
                         var escaped = monster.MoveAround();
                         if (!escaped) {
                             this.movingMonsters.push(monster);
@@ -400,7 +401,7 @@ var GameBoardController = /** @class */ (function (_super) {
         }
         /* if it is a Lightning Burn, then check if there is any monster
          on the screen. If yes, then do NOT add new monsters. */
-        if (!(this.ManualBurn && monsterCount > 0)) {
+        if (!(this.WeaponUsed && monsterCount > 0)) {
             /* Add new bugs */
             var newMonsters = this.populateMonsters();
             for (var _i = 0, newMonsters_1 = newMonsters; _i < newMonsters_1.length; _i++) {
@@ -429,9 +430,19 @@ var GameBoardController = /** @class */ (function (_super) {
     GameBoardController.prototype.updateMonsterMoving = function () {
         if (this.CurrentGameState == Enums.GameState.MonsterMoving) {
             if (this.movingMonsters.length == 0) {
-                this.checkGameOver();
+                this.checkMonsterGiftCollision();
             }
         }
+    };
+    GameBoardController.prototype.checkMonsterGiftCollision = function () {
+        for (var _i = 0, _a = this.monstersOnBoard; _i < _a.length; _i++) {
+            var monster = _a[_i];
+            if (monster.CheckGiftCollision()) {
+                this.checkTriggeredBomb();
+                // return;
+            }
+        }
+        this.checkGameOver();
     };
     GameBoardController.prototype.checkGameOver = function () {
         if (this.escapedMonsterCount >= 3) {
@@ -470,7 +481,8 @@ var GameBoardController = /** @class */ (function (_super) {
         }
     };
     GameBoardController.prototype.goForNextRound = function () {
-        this.ManualBurn = false;
+        this.usePresets = false;
+        this.WeaponUsed = false;
         this.CurrentGameState = Enums.GameState.Idle;
     };
     GameBoardController.prototype.sparkAt = function (particle, position) {
@@ -747,13 +759,13 @@ var GameBoardController = /** @class */ (function (_super) {
         // (GamePage.Current as GamePage).PlayBurningSoundEffect();
     };
     GameBoardController.prototype.setFireWithLightning = function (cell) {
-        this.ManualBurn = true;
+        this.WeaponUsed = true;
         this.CellBurntByLigntning = cell;
         cell.Burn(this.electricEffect, Enums.Direction.Left, null);
     };
     GameBoardController.prototype.stopFire = function () {
         this.electricEffect.ClearFlows();
-        if (this.ManualBurn) {
+        if (this.CellBurntByLigntning != null) {
             var tree = new Array();
             this.getConnectionTree(this.CellBurntByLigntning, tree);
             for (var _i = 0, tree_4 = tree; _i < tree_4.length; _i++) {
@@ -780,8 +792,6 @@ var GameBoardController = /** @class */ (function (_super) {
             this.circuitTree.splice(0, this.circuitTree.length);
         }
     };
-    //#endregion
-    //#region Monster
     GameBoardController.prototype.generateMonsters = function () {
         var monsters = new Array();
         // test
@@ -800,28 +810,32 @@ var GameBoardController = /** @class */ (function (_super) {
         }
         else {
             newMonsters = this.generateMonsters();
-            //get empty cell in the first row
-            var startingLine = new Array();
-            for (var col = 0; col < Global.BOARD_COLUMN_COUNT; col++) {
-                var cell = this.cellMatrix[Global.BOARD_ROW_COUNT - 1][col];
-                if (cell.AttachedMonster == null) {
-                    startingLine.push(cell);
-                }
-            }
-            /* put new bugs into empty cells, until there's no more empty cells,
-             * then give up */
-            for (var _i = 0, newMonsters_2 = newMonsters; _i < newMonsters_2.length; _i++) {
-                var monster = newMonsters_2[_i];
-                if (startingLine.length <= 0) {
-                    break;
-                }
-                var index = Math.floor(Math.random() * startingLine.length);
-                monster.AttachToCell(startingLine[index]);
-                monster.GetReadyForShow();
-                startingLine.splice(index, 1);
+        }
+        //get empty cell in the first row
+        var startingLine = new Array();
+        for (var col = 0; col < Global.BOARD_COLUMN_COUNT; col++) {
+            var cell = this.cellMatrix[Global.BOARD_ROW_COUNT - 1][col];
+            if (cell.AttachedMonster == null) {
+                startingLine.push(cell);
             }
         }
+        /* put new bugs into empty cells, until there's no more empty cells,
+            * then give up */
+        for (var _i = 0, newMonsters_2 = newMonsters; _i < newMonsters_2.length; _i++) {
+            var monster = newMonsters_2[_i];
+            if (startingLine.length <= 0) {
+                break;
+            }
+            var index = Math.floor(Math.random() * startingLine.length);
+            monster.AttachToCell(startingLine[index]);
+            monster.GetReadyForShow();
+            startingLine.splice(index, 1);
+            this.monstersOnBoard.push(monster);
+        }
         return newMonsters;
+    };
+    GameBoardController.prototype.RemoveMonsterFromBoard = function (monster) {
+        this.monstersOnBoard.splice(this.monstersOnBoard.indexOf(monster), 1);
     };
     GameBoardController.prototype.removeMonster = function (monster) {
     };
@@ -833,11 +847,8 @@ var GameBoardController = /** @class */ (function (_super) {
     GameBoardController.prototype.getGifts = function () {
         var gifts = new Array();
         //check for tutorial
-        // xxx test
-        this.usePresets = true;
         if (this.usePresets) {
             gifts = this.initTutorialGifts();
-            this.usePresets = false;
         }
         else {
             gifts = new Array();
@@ -880,11 +891,38 @@ var GameBoardController = /** @class */ (function (_super) {
     };
     GameBoardController.prototype.initTutorialGifts = function () {
         var gifts = new Array();
-        var cellToAttach = this.cellMatrix[3][2];
-        var newGiftNode = cc.instantiate(this.GiftTemplate);
+        var cellToAttach = null;
+        var newGiftNode = null;
+        var gift = null;
+        cellToAttach = this.cellMatrix[6][0];
+        newGiftNode = cc.instantiate(this.GiftTemplate);
         this.giftLayer.addChild(newGiftNode);
-        var gift = newGiftNode.getComponent(GiftController_1.default);
-        gift.Init(Enums.GiftType.Lightning, cellToAttach);
+        gift = newGiftNode.getComponent(GiftController_1.default);
+        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gifts.push(gift);
+        cellToAttach = this.cellMatrix[6][1];
+        newGiftNode = cc.instantiate(this.GiftTemplate);
+        this.giftLayer.addChild(newGiftNode);
+        gift = newGiftNode.getComponent(GiftController_1.default);
+        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gifts.push(gift);
+        cellToAttach = this.cellMatrix[6][2];
+        newGiftNode = cc.instantiate(this.GiftTemplate);
+        this.giftLayer.addChild(newGiftNode);
+        gift = newGiftNode.getComponent(GiftController_1.default);
+        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gifts.push(gift);
+        cellToAttach = this.cellMatrix[6][3];
+        newGiftNode = cc.instantiate(this.GiftTemplate);
+        this.giftLayer.addChild(newGiftNode);
+        gift = newGiftNode.getComponent(GiftController_1.default);
+        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gifts.push(gift);
+        cellToAttach = this.cellMatrix[6][4];
+        newGiftNode = cc.instantiate(this.GiftTemplate);
+        this.giftLayer.addChild(newGiftNode);
+        gift = newGiftNode.getComponent(GiftController_1.default);
+        gift.Init(Enums.GiftType.Bomb, cellToAttach);
         gifts.push(gift);
         return gifts;
     };
@@ -922,6 +960,7 @@ var GameBoardController = /** @class */ (function (_super) {
         this.triggeredBombs.push(bomb);
     };
     GameBoardController.prototype.startExplosionAt = function (bomb) {
+        this.WeaponUsed = true;
         this.ExplodingBomb = bomb;
         var bombCell = this.ExplodingBomb.attachedCell;
         this.BombExplosion.Show(bombCell);
@@ -963,7 +1002,7 @@ var GameBoardController = /** @class */ (function (_super) {
         this.monsterKilledInThisBurn++;
     };
     GameBoardController.prototype.tryCongratulateCombo = function () {
-        if (!this.ManualBurn) {
+        if (!this.WeaponUsed) {
             /* Queue Combo Award */
             if (this.monsterKilledInThisBurn < 2) {
                 this.monsterKilledInThisBurn = 0;
@@ -983,10 +1022,40 @@ var GameBoardController = /** @class */ (function (_super) {
     //#endregion
     //#region Tutorial
     GameBoardController.prototype.initTutorialCells = function () {
-        return null;
+        var cells = new Array();
+        return cells;
     };
     GameBoardController.prototype.initTutorialMonsters = function () {
-        return null;
+        var monsters = new Array();
+        // xxx test
+        var monsterNode = null;
+        var monster = null;
+        monsterNode = cc.instantiate(this.MonsterTemplate);
+        monster = monsterNode.getComponent(MonsterController_1.default);
+        monster.InitMonster(Enums.MonsterType.Small);
+        monsters.push(monster);
+        this.MonsterLayer.addChild(monsterNode);
+        monsterNode = cc.instantiate(this.MonsterTemplate);
+        monster = monsterNode.getComponent(MonsterController_1.default);
+        monster.InitMonster(Enums.MonsterType.Small);
+        monsters.push(monster);
+        this.MonsterLayer.addChild(monsterNode);
+        monsterNode = cc.instantiate(this.MonsterTemplate);
+        monster = monsterNode.getComponent(MonsterController_1.default);
+        monster.InitMonster(Enums.MonsterType.Small);
+        monsters.push(monster);
+        this.MonsterLayer.addChild(monsterNode);
+        monsterNode = cc.instantiate(this.MonsterTemplate);
+        monster = monsterNode.getComponent(MonsterController_1.default);
+        monster.InitMonster(Enums.MonsterType.Small);
+        monsters.push(monster);
+        this.MonsterLayer.addChild(monsterNode);
+        monsterNode = cc.instantiate(this.MonsterTemplate);
+        monster = monsterNode.getComponent(MonsterController_1.default);
+        monster.InitMonster(Enums.MonsterType.Small);
+        monsters.push(monster);
+        this.MonsterLayer.addChild(monsterNode);
+        return monsters;
     };
     GameBoardController.prototype.Debug_CurrentGameState = function () {
         this.Debug_Lable.string = this.CurrentGameState.toString();

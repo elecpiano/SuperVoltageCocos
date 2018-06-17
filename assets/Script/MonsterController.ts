@@ -176,6 +176,8 @@ export default class MonsterController extends cc.Component {
         this.MonsterEye.spriteFrame = this.m_eye_open;
     }
 
+    //#endregion
+
     //#region Lifecycle
 
     start () {
@@ -249,7 +251,7 @@ export default class MonsterController extends cc.Component {
     /* DO NOT directly attach the monster to target cell here, 
     because it may cause redundant MoveAround() call on the same monster 
     by processMonster() method in the GameBoardController.
-    So let's defer the attaching job to DoMoveAround() method, which will be executed 
+    So let's defer the attaching job to later method, which will be executed 
     after all the monsters have been correctly prepared for movement 
     */
     AlreadyMovedAround: boolean = false;
@@ -517,7 +519,7 @@ export default class MonsterController extends cc.Component {
 
     //#endregion
 
-    //#region GamePlay Activity
+    //#region Wound, Die, Escape
 
     Wound() : boolean {
         let dead = false;
@@ -569,13 +571,14 @@ export default class MonsterController extends cc.Component {
             cc.sequence(
                 cc.moveBy(Global.MONSTER_MOVE_DURATION, cc.p(0,this.node.height)),
                 cc.callFunc(()=>{
+                    this.gameBoard.RemoveMonsterFromBoard(this);
                     this.node.parent.removeChild(this.node);
                     // this.node.destroy();
                 }
             )
             ));
         
-        if (!this.gameBoard.ManualBurn 
+        if (this.gameBoard.CellBurntByLigntning == null 
             && this.gameBoard.CurrentGameState != Enums.GameState.Bombing)
         {
             this.gameBoard.CountMonsterKill();
@@ -591,6 +594,7 @@ export default class MonsterController extends cc.Component {
             cc.sequence(
                 cc.moveBy(Global.MONSTER_MOVE_DURATION, cc.p(0, -this.node.height)),
                 cc.callFunc(()=>{
+                    this.gameBoard.RemoveMonsterFromBoard(this);
                     this.node.parent.removeChild(this.node);
                     // this.node.destroy();
                 })
@@ -606,4 +610,16 @@ export default class MonsterController extends cc.Component {
 
     //#endregion
 
+    //#region Gift
+
+    CheckGiftCollision() : boolean {
+        let collisionHappened:boolean = false;
+        if (this.attachedCell.AttachedGift != null) {
+            this.attachedCell.AttachedGift.MonsterCollide();
+            collisionHappened = true;
+        }
+        return collisionHappened;
+    }
+
+    //#endregion
 }

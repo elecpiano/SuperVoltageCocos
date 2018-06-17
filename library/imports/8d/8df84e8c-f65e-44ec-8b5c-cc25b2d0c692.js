@@ -66,7 +66,7 @@ var MonsterController = /** @class */ (function (_super) {
         /* DO NOT directly attach the monster to target cell here,
         because it may cause redundant MoveAround() call on the same monster
         by processMonster() method in the GameBoardController.
-        So let's defer the attaching job to DoMoveAround() method, which will be executed
+        So let's defer the attaching job to later method, which will be executed
         after all the monsters have been correctly prepared for movement
         */
         _this.AlreadyMovedAround = false;
@@ -163,6 +163,7 @@ var MonsterController = /** @class */ (function (_super) {
         enumerable: true,
         configurable: true
     });
+    //#endregion
     //#region Lifecycle
     MonsterController.prototype.start = function () {
         this.eyeBlink();
@@ -410,7 +411,7 @@ var MonsterController = /** @class */ (function (_super) {
         }
     };
     //#endregion
-    //#region GamePlay Activity
+    //#region Wound, Die, Escape
     MonsterController.prototype.Wound = function () {
         var dead = false;
         this.Health--;
@@ -447,10 +448,11 @@ var MonsterController = /** @class */ (function (_super) {
         this.MonsterBody.spriteFrame = this.sf_body_shock_2;
         this.node.runAction(cc.fadeOut(Global.MONSTER_MOVE_DURATION));
         this.node.runAction(cc.sequence(cc.moveBy(Global.MONSTER_MOVE_DURATION, cc.p(0, this.node.height)), cc.callFunc(function () {
+            _this.gameBoard.RemoveMonsterFromBoard(_this);
             _this.node.parent.removeChild(_this.node);
             // this.node.destroy();
         })));
-        if (!this.gameBoard.ManualBurn
+        if (this.gameBoard.CellBurntByLigntning == null
             && this.gameBoard.CurrentGameState != Enums.GameState.Bombing) {
             this.gameBoard.CountMonsterKill();
         }
@@ -461,6 +463,7 @@ var MonsterController = /** @class */ (function (_super) {
         this.gameBoard.WarnEscape();
         this.detachFromCell();
         this.node.runAction(cc.sequence(cc.moveBy(Global.MONSTER_MOVE_DURATION, cc.p(0, -this.node.height)), cc.callFunc(function () {
+            _this.gameBoard.RemoveMonsterFromBoard(_this);
             _this.node.parent.removeChild(_this.node);
             // this.node.destroy();
         })));
@@ -469,6 +472,16 @@ var MonsterController = /** @class */ (function (_super) {
         //     CoreLogic.CurrentGameLevel.Tolerance--;
         //     CoreLogic.TopBar.UpdateTolerance();
         // }
+    };
+    //#endregion
+    //#region Gift
+    MonsterController.prototype.CheckGiftCollision = function () {
+        var collisionHappened = false;
+        if (this.attachedCell.AttachedGift != null) {
+            this.attachedCell.AttachedGift.MonsterCollide();
+            collisionHappened = true;
+        }
+        return collisionHappened;
     };
     __decorate([
         property(cc.Sprite)

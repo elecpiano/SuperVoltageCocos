@@ -62,14 +62,19 @@ export default class GiftController extends cc.Component {
     }
 
     Burn(){
-        if (this.GiftType == Enums.GiftType.Bomb)
-        {
+        if (this.GiftType == Enums.GiftType.Bomb) {
             this.TriggerAsBomb();
-            return;
-        }
-
-        if (this.GiftType == Enums.GiftType.Lightning) {
+        }else if (this.GiftType == Enums.GiftType.Lightning) {
             this.discard();
+        }
+    }
+
+    MonsterCollide(){
+        if (this.GiftType == Enums.GiftType.Bomb) {
+            this.attachedCell.gameBoard.ManuallyExplode(this);   
+            // this.TriggerAsBomb();         
+        }else if (this.GiftType == Enums.GiftType.Lightning) {
+            this.attachedCell.gameBoard.ManuallyBurn(this.attachedCell);            
         }
     }
 
@@ -129,8 +134,6 @@ export default class GiftController extends cc.Component {
 
     //#region Move
 
-    GIFT_MOVE_DURATION = 1;
-
     GetReadyForShow(){
         this.node.setPosition(this.attachedCell.Board_X * this.attachedCell.node.width + Global.BOARD_OFFSET_X, 
                               this.attachedCell.node.height * Global.BOARD_ROW_COUNT + Global.STARTING_LINE_OFFSET);
@@ -138,12 +141,12 @@ export default class GiftController extends cc.Component {
 
     Award(selector: Function){
         if (selector == null) {
-            this.node.runAction(cc.moveTo(this.GIFT_MOVE_DURATION, this.WhereItShouldBe));
+            this.node.runAction(cc.moveTo(Global.GIFT_MOVE_DURATION, this.WhereItShouldBe));
         }
         else{
             this.node.runAction(
                 cc.sequence(
-                    cc.moveTo(this.GIFT_MOVE_DURATION, this.WhereItShouldBe),
+                    cc.moveTo(Global.GIFT_MOVE_DURATION, this.WhereItShouldBe),
                     cc.callFunc(selector, this)
                 )
             );
@@ -187,7 +190,7 @@ export default class GiftController extends cc.Component {
 
     //#endregion
 
-    //#endregion Long Press
+    //#region Long Press
 
     longpressHintAction: cc.Action = null;
     longpressHintShown:boolean = false;
@@ -195,24 +198,24 @@ export default class GiftController extends cc.Component {
 
     ShowLongPressHint(){
         this.attachedCell.gameBoard.ShowChargeEffect(this.GiftType, this.node.position);
-        this.GiftBody.node.setScale(3);
+        // this.GiftBody.node.setScale(3);
     }
 
     StopLongPressHint(){
         this.attachedCell.gameBoard.HideChargeEffect(this.GiftType);
-        this.GiftBody.node.setScale(1);
+        // this.GiftBody.node.setScale(1);
     }
 
     LongPressFire(){
         this.StopLongPressHint();
         if (this.GiftType == Enums.GiftType.Lightning) {
-            this.attachedCell.gameBoard.BurnWithLightning(this.attachedCell);            
+            this.attachedCell.gameBoard.ManuallyBurn(this.attachedCell);            
         }
         else if (this.GiftType == Enums.GiftType.Bomb) {
             this.BombTriggered = true;
             this.flicker_stopped = true;
             this.node.opacity = 0;
-            this.attachedCell.gameBoard.BombExplode(this);
+            this.attachedCell.gameBoard.ManuallyExplode(this);
         }
         this.longpressFired = true;
     }

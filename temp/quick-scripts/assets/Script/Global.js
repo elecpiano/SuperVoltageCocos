@@ -29,6 +29,7 @@ exports.GIFT_LONGPRESS_DURATION = 2;
 exports.GIFT_LONGPRESS_THESHOLD = 0.6;
 exports.GIFT_FLICKER_INTERVAL = 0.7;
 exports.BOMB_DURATION = 1;
+exports.GIFT_MOVE_DURATION = 0.7;
 
 cc._RF.pop();
         }

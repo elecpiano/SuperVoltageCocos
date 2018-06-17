@@ -31,7 +31,8 @@
     export const GIFT_LONGPRESS_THESHOLD = 0.6;
     export const GIFT_FLICKER_INTERVAL = 0.7;
     export const BOMB_DURATION  = 1;
-
+    export const GIFT_MOVE_DURATION = 0.7;
+ 
 
 
 

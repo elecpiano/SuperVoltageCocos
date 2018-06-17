@@ -53,7 +53,7 @@ export default class GameBoardController extends cc.Component {
         monsters: Array<MonsterController> = null;
         CurrentRoundEnemyKill = 0;
         CurrentlyTouchedCell: CellController = null;
-        usePresets = false;
+        usePresets = true;//xxx test
         escapedMonsterCount = 0;
 
     //#endregion
@@ -121,7 +121,7 @@ export default class GameBoardController extends cc.Component {
         this.updateBurn();
     }
 
-    BurnWithLightning(cell: CellController){
+    ManuallyBurn(cell: CellController){
         this.CurrentGameState = Enums.GameState.Burning;
         this.setFireWithLightning(cell);
         this.updateBurn();
@@ -132,11 +132,17 @@ export default class GameBoardController extends cc.Component {
             ()=>{
                 this.stopFire();
                 this.tryCongratulateCombo();
-                this.tryBombing();
+                this.checkTriggeredBomb();
             },Global.BURN_DURATION);
     }
 
-    tryBombing(){
+    ManuallyExplode(bomb: GiftController){
+        this.startExplosionAt(bomb);
+        this.CurrentGameState = Enums.GameState.Bombing;
+        this.UpdateBombing();
+    }
+
+    checkTriggeredBomb(){
         if (this.triggeredBombs.length > 0) {
             let bomb = this.triggeredBombs.pop();
             this.startExplosionAt(bomb);
@@ -148,17 +154,11 @@ export default class GameBoardController extends cc.Component {
         }
     }
 
-    BombExplode(bomb: GiftController){
-        this.startExplosionAt(bomb);
-        this.CurrentGameState = Enums.GameState.Bombing;
-        this.UpdateBombing();
-    }
-
     UpdateBombing(){
         this.scheduleOnce(
             ()=>{
                 this.stopExplosion();
-                this.tryBombing(); /* a bomb explosion may trigger another bomb, so let's check again */
+                this.checkTriggeredBomb(); /* a bomb explosion may trigger another bomb, so let's check again */
             },Global.BOMB_DURATION);
     }
 
@@ -288,7 +288,7 @@ export default class GameBoardController extends cc.Component {
                      * therefore causing this hint detection happen.
                      * That's why we are setting the GameState to Idle when the game
                      * is continued. Please refer to CoreLogic.LoadGameData() method. */
-                    if (!this.ManualBurn)
+                    if (!this.WeaponUsed)
                     {
                         this.ChainCount++;
                     }
@@ -314,7 +314,7 @@ export default class GameBoardController extends cc.Component {
                 {
                     monsterCount ++;
                     let monster = cell.AttachedMonster;
-                    if (monster.ShouldMoveAround && !this.ManualBurn) {
+                    if (monster.ShouldMoveAround && !this.WeaponUsed) {
                         let escaped = monster.MoveAround();
                         if (!escaped) {
                             this.movingMonsters.push(monster);                        
@@ -330,7 +330,7 @@ export default class GameBoardController extends cc.Component {
 
         /* if it is a Lightning Burn, then check if there is any monster
          on the screen. If yes, then do NOT add new monsters. */
-        if (!(this.ManualBurn && monsterCount > 0)){
+        if (!(this.WeaponUsed && monsterCount > 0)){
             /* Add new bugs */
             let newMonsters = this.populateMonsters();
             for (let monster of newMonsters) {
@@ -359,9 +359,21 @@ export default class GameBoardController extends cc.Component {
     updateMonsterMoving(){
         if (this.CurrentGameState == Enums.GameState.MonsterMoving){
             if (this.movingMonsters.length == 0) {
-                this.checkGameOver();
+                this.checkMonsterGiftCollision();
             }
         }
+    }
+
+    checkMonsterGiftCollision(){
+        for (let monster of this.monstersOnBoard) {
+            monster.CheckGiftCollision();
+            // if (monster.CheckGiftCollision()) {
+            //     this.checkTriggeredBomb();
+            //     // return;
+            // }
+        }
+
+        this.checkGameOver();            
     }
 
     checkGameOver(){
@@ -402,7 +414,8 @@ export default class GameBoardController extends cc.Component {
     }
 
     goForNextRound(){
-        this.ManualBurn = false;
+        this.usePresets = false;
+        this.WeaponUsed = false;
         this.CurrentGameState = Enums.GameState.Idle; 
     }
 
@@ -786,11 +799,9 @@ export default class GameBoardController extends cc.Component {
 
     //#region Burn
 
-    /* ManualBurn property is used to distinguish the manual burn (caused by Lightning) 
-    and natural burn (caused by Cell rotation).
-    If it is a Lightning burn, no Combo and Chain is counted. */
+    /* If weapon is used for burning or bombing, no Combo and Chain is counted. */
     
-    ManualBurn: boolean = false;
+    WeaponUsed: boolean = false;
     CellBurntByLigntning: CellController = null;
 
     setFire(tree: Array<CellController>){
@@ -809,7 +820,7 @@ export default class GameBoardController extends cc.Component {
     }
 
     setFireWithLightning(cell: CellController){
-        this.ManualBurn = true;
+        this.WeaponUsed = true;
         this.CellBurntByLigntning = cell;
         cell.Burn(this.electricEffect, Enums.Direction.Left, null);
     }
@@ -817,7 +828,7 @@ export default class GameBoardController extends cc.Component {
     stopFire(){
         this.electricEffect.ClearFlows();
 
-        if (this.ManualBurn) {
+        if (this.CellBurntByLigntning != null) {
             let tree = new Array<CellController>();
             this.getConnectionTree(this.CellBurntByLigntning, tree);
             for (let cell of tree) {
@@ -848,6 +859,8 @@ export default class GameBoardController extends cc.Component {
 
     //#region Monster
 
+    monstersOnBoard: Array<MonsterController> = new Array<MonsterController>();
+
     generateMonsters():Array<MonsterController>{
         let monsters = new Array<MonsterController>();
 
@@ -865,42 +878,45 @@ export default class GameBoardController extends cc.Component {
         let newMonsters: Array<MonsterController> = new Array<MonsterController>();
 
         //check for tutorial
-        if (this.usePresets)
-        {
+        if (this.usePresets) {
             newMonsters = this.initTutorialMonsters();
-        }
-        else
-        {
+        }else {
             newMonsters = this.generateMonsters();
+        }
 
-            //get empty cell in the first row
-            let startingLine = new Array<CellController>();
-            for (let col = 0; col < Global.BOARD_COLUMN_COUNT; col++)
+        //get empty cell in the first row
+        let startingLine = new Array<CellController>();
+        for (let col = 0; col < Global.BOARD_COLUMN_COUNT; col++)
+        {
+            let cell = this.cellMatrix[Global.BOARD_ROW_COUNT -1][col];
+            if (cell.AttachedMonster == null)
             {
-                let cell = this.cellMatrix[Global.BOARD_ROW_COUNT -1][col];
-                if (cell.AttachedMonster == null)
-                {
-                    startingLine.push(cell);
-                }
+                startingLine.push(cell);
+            }
+        }
+
+        /* put new bugs into empty cells, until there's no more empty cells,
+            * then give up */
+        for (let monster of newMonsters)
+        {
+            if (startingLine.length <= 0)
+            {
+                break;
             }
 
-            /* put new bugs into empty cells, until there's no more empty cells,
-             * then give up */
-            for (let monster of newMonsters)
-            {
-                if (startingLine.length <= 0)
-                {
-                    break;
-                }
+            let index = Math.floor(Math.random() * startingLine.length);
+            monster.AttachToCell(startingLine[index]);
+            monster.GetReadyForShow();
+            startingLine.splice(index,1);
 
-                let index = Math.floor(Math.random() * startingLine.length);
-                monster.AttachToCell(startingLine[index]);
-                monster.GetReadyForShow();
-                startingLine.splice(index,1);
-            }
+            this.monstersOnBoard.push(monster);
         }
 
         return newMonsters;
+    }
+
+    RemoveMonsterFromBoard(monster: MonsterController){
+        this.monstersOnBoard.splice(this.monstersOnBoard.indexOf(monster),1);
     }
 
     removeMonster(monster: MonsterController){
@@ -937,12 +953,9 @@ export default class GameBoardController extends cc.Component {
         let gifts = new Array<GiftController>();
 
         //check for tutorial
-        // xxx test
-        this.usePresets = true;
         if (this.usePresets)
         {
             gifts = this.initTutorialGifts();
-            this.usePresets = false;
         }
         else
         {
@@ -997,11 +1010,43 @@ export default class GameBoardController extends cc.Component {
     initTutorialGifts():Array<GiftController>{
         let gifts = new Array<GiftController>();
 
-        let cellToAttach = this.cellMatrix[3][2];
-        let newGiftNode = cc.instantiate(this.GiftTemplate);
+        let cellToAttach: CellController = null;
+        let newGiftNode: cc.Node = null;
+        let gift: GiftController = null;
+
+        cellToAttach = this.cellMatrix[6][0];
+        newGiftNode = cc.instantiate(this.GiftTemplate);
         this.giftLayer.addChild(newGiftNode);
-        let gift = newGiftNode.getComponent(GiftController);
-        gift.Init(Enums.GiftType.Lightning, cellToAttach);
+        gift = newGiftNode.getComponent(GiftController);
+        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gifts.push(gift);
+
+        cellToAttach = this.cellMatrix[6][1];
+        newGiftNode = cc.instantiate(this.GiftTemplate);
+        this.giftLayer.addChild(newGiftNode);
+        gift = newGiftNode.getComponent(GiftController);
+        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gifts.push(gift);
+
+        cellToAttach = this.cellMatrix[6][2];
+        newGiftNode = cc.instantiate(this.GiftTemplate);
+        this.giftLayer.addChild(newGiftNode);
+        gift = newGiftNode.getComponent(GiftController);
+        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gifts.push(gift);
+
+        cellToAttach = this.cellMatrix[6][3];
+        newGiftNode = cc.instantiate(this.GiftTemplate);
+        this.giftLayer.addChild(newGiftNode);
+        gift = newGiftNode.getComponent(GiftController);
+        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gifts.push(gift);
+
+        cellToAttach = this.cellMatrix[6][4];
+        newGiftNode = cc.instantiate(this.GiftTemplate);
+        this.giftLayer.addChild(newGiftNode);
+        gift = newGiftNode.getComponent(GiftController);
+        gift.Init(Enums.GiftType.Bomb, cellToAttach);
         gifts.push(gift);
 
         return gifts;
@@ -1060,6 +1105,8 @@ export default class GameBoardController extends cc.Component {
     ExplodingBomb: GiftController = null;
 
     startExplosionAt(bomb: GiftController) {
+        this.WeaponUsed = true;
+
         this.ExplodingBomb = bomb;
         let bombCell: CellController = this.ExplodingBomb.attachedCell;
         this.BombExplosion.Show(bombCell);
@@ -1116,7 +1163,7 @@ export default class GameBoardController extends cc.Component {
     }
 
     tryCongratulateCombo(){
-        if (!this.ManualBurn) {
+        if (!this.WeaponUsed) {
             /* Queue Combo Award */
             if (this.monsterKilledInThisBurn <2){
                 this.monsterKilledInThisBurn = 0;
@@ -1141,11 +1188,49 @@ export default class GameBoardController extends cc.Component {
     //#region Tutorial
 
     initTutorialCells() : Array<CellController> {
-        return null;
+        let cells = new Array<CellController>();
+
+        return cells;
     }
 
     initTutorialMonsters() : Array<MonsterController> {
-        return null;
+        let monsters = new Array<MonsterController>();
+
+        // xxx test
+        let monsterNode:cc.Node = null;
+        let monster: MonsterController = null;
+
+        monsterNode = cc.instantiate(this.MonsterTemplate);
+        monster = monsterNode.getComponent(MonsterController);
+        monster.InitMonster(Enums.MonsterType.Small);
+        monsters.push(monster);
+        this.MonsterLayer.addChild(monsterNode);
+
+        monsterNode = cc.instantiate(this.MonsterTemplate);
+        monster = monsterNode.getComponent(MonsterController);
+        monster.InitMonster(Enums.MonsterType.Small);
+        monsters.push(monster);
+        this.MonsterLayer.addChild(monsterNode);
+
+        monsterNode = cc.instantiate(this.MonsterTemplate);
+        monster = monsterNode.getComponent(MonsterController);
+        monster.InitMonster(Enums.MonsterType.Small);
+        monsters.push(monster);
+        this.MonsterLayer.addChild(monsterNode);
+
+        monsterNode = cc.instantiate(this.MonsterTemplate);
+        monster = monsterNode.getComponent(MonsterController);
+        monster.InitMonster(Enums.MonsterType.Small);
+        monsters.push(monster);
+        this.MonsterLayer.addChild(monsterNode);
+
+        monsterNode = cc.instantiate(this.MonsterTemplate);
+        monster = monsterNode.getComponent(MonsterController);
+        monster.InitMonster(Enums.MonsterType.Small);
+        monsters.push(monster);
+        this.MonsterLayer.addChild(monsterNode);
+
+        return monsters;
     }
 
     //#endregion

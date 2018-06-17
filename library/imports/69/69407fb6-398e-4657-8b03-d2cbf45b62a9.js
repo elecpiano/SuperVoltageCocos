@@ -29,13 +29,10 @@ var GiftController = /** @class */ (function (_super) {
         _this.attachedCell = null;
         _this._WhereItShouldBe = new cc.Vec2(0, 0);
         //#endregion
-        //#region Move
-        _this.GIFT_MOVE_DURATION = 1;
-        //#endregion
         //#region Bomb
         _this.BombTriggered = false;
         //#endregion
-        //#endregion Long Press
+        //#region Long Press
         _this.longpressHintAction = null;
         _this.longpressHintShown = false;
         _this.longpressFired = false;
@@ -74,10 +71,18 @@ var GiftController = /** @class */ (function (_super) {
     GiftController.prototype.Burn = function () {
         if (this.GiftType == Enums.GiftType.Bomb) {
             this.TriggerAsBomb();
-            return;
         }
-        if (this.GiftType == Enums.GiftType.Lightning) {
+        else if (this.GiftType == Enums.GiftType.Lightning) {
             this.discard();
+        }
+    };
+    GiftController.prototype.MonsterCollide = function () {
+        if (this.GiftType == Enums.GiftType.Bomb) {
+            // this.attachedCell.gameBoard.ManuallyExplode(this);   
+            this.TriggerAsBomb();
+        }
+        else if (this.GiftType == Enums.GiftType.Lightning) {
+            this.attachedCell.gameBoard.ManuallyBurn(this.attachedCell);
         }
     };
     GiftController.prototype.flicker = function () {
@@ -118,15 +123,17 @@ var GiftController = /** @class */ (function (_super) {
         this.detachFromCell();
         this.node.parent.removeChild(this.node);
     };
+    //#endregion
+    //#region Move
     GiftController.prototype.GetReadyForShow = function () {
         this.node.setPosition(this.attachedCell.Board_X * this.attachedCell.node.width + Global.BOARD_OFFSET_X, this.attachedCell.node.height * Global.BOARD_ROW_COUNT + Global.STARTING_LINE_OFFSET);
     };
     GiftController.prototype.Award = function (selector) {
         if (selector == null) {
-            this.node.runAction(cc.moveTo(this.GIFT_MOVE_DURATION, this.WhereItShouldBe));
+            this.node.runAction(cc.moveTo(Global.GIFT_MOVE_DURATION, this.WhereItShouldBe));
         }
         else {
-            this.node.runAction(cc.sequence(cc.moveTo(this.GIFT_MOVE_DURATION, this.WhereItShouldBe), cc.callFunc(selector, this)));
+            this.node.runAction(cc.sequence(cc.moveTo(Global.GIFT_MOVE_DURATION, this.WhereItShouldBe), cc.callFunc(selector, this)));
         }
         this.flicker();
     };
@@ -148,22 +155,22 @@ var GiftController = /** @class */ (function (_super) {
     };
     GiftController.prototype.ShowLongPressHint = function () {
         this.attachedCell.gameBoard.ShowChargeEffect(this.GiftType, this.node.position);
-        this.GiftBody.node.setScale(3);
+        // this.GiftBody.node.setScale(3);
     };
     GiftController.prototype.StopLongPressHint = function () {
         this.attachedCell.gameBoard.HideChargeEffect(this.GiftType);
-        this.GiftBody.node.setScale(1);
+        // this.GiftBody.node.setScale(1);
     };
     GiftController.prototype.LongPressFire = function () {
         this.StopLongPressHint();
         if (this.GiftType == Enums.GiftType.Lightning) {
-            this.attachedCell.gameBoard.BurnWithLightning(this.attachedCell);
+            this.attachedCell.gameBoard.ManuallyBurn(this.attachedCell);
         }
         else if (this.GiftType == Enums.GiftType.Bomb) {
             this.BombTriggered = true;
             this.flicker_stopped = true;
             this.node.opacity = 0;
-            this.attachedCell.gameBoard.BombExplode(this);
+            this.attachedCell.gameBoard.ManuallyExplode(this);
         }
         this.longpressFired = true;
     };

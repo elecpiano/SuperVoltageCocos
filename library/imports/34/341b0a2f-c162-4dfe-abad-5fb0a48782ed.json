@@ -3774,19 +3774,19 @@
       "__uuid__": "bb0f163b-cf16-40e4-b5ef-b258eb814b99"
     },
     "_srcBlendFactor": 770,
-    "_dstBlendFactor": 771,
+    "_dstBlendFactor": 772,
     "playOnLoad": false,
     "_autoRemoveOnFinish": false,
     "_totalParticles": 100,
-    "_duration": -1,
-    "_emissionRate": 30,
+    "_duration": 1,
+    "_emissionRate": 70,
     "_life": 0.5,
-    "_lifeVar": 0.5,
+    "_lifeVar": 0.3,
     "_startColor": {
       "__type__": "cc.Color",
-      "r": 0,
+      "r": 255,
       "g": 255,
-      "b": 224,
+      "b": 255,
       "a": 255
     },
     "_startColorVar": {
@@ -3798,9 +3798,9 @@
     },
     "_endColor": {
       "__type__": "cc.Color",
-      "r": 126,
-      "g": 255,
-      "b": 239,
+      "r": 52,
+      "g": 34,
+      "b": 255,
       "a": 0
     },
     "_endColorVar": {
@@ -3814,8 +3814,8 @@
     "_angleVar": 360,
     "_startSize": 50,
     "_startSizeVar": 30,
-    "_endSize": 0,
-    "_endSizeVar": 0,
+    "_endSize": 30,
+    "_endSizeVar": 10,
     "_startSpin": 0,
     "_startSpinVar": 0,
     "_endSpin": 0,
@@ -3921,15 +3921,15 @@
     "playOnLoad": false,
     "_autoRemoveOnFinish": false,
     "_totalParticles": 100,
-    "_duration": -1,
-    "_emissionRate": 30,
+    "_duration": 1,
+    "_emissionRate": 70,
     "_life": 0.5,
-    "_lifeVar": 0.5,
+    "_lifeVar": 0.3,
     "_startColor": {
       "__type__": "cc.Color",
       "r": 255,
-      "g": 244,
-      "b": 111,
+      "g": 250,
+      "b": 192,
       "a": 255
     },
     "_startColorVar": {
@@ -3941,8 +3941,8 @@
     },
     "_endColor": {
       "__type__": "cc.Color",
-      "r": 255,
-      "g": 214,
+      "r": 245,
+      "g": 255,
       "b": 0,
       "a": 0
     },
@@ -3957,8 +3957,8 @@
     "_angleVar": 360,
     "_startSize": 50,
     "_startSizeVar": 30,
-    "_endSize": 0,
-    "_endSizeVar": 0,
+    "_endSize": 30,
+    "_endSizeVar": 10,
     "_startSpin": 0,
     "_startSpinVar": 0,
     "_endSpin": 0,

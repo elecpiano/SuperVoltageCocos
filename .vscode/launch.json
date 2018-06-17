@@ -4,13 +4,19 @@
     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
         {
+            "name": "Creator Debug: Launch Chrome",
             "type": "chrome",
             "request": "launch",
-            "name": "启动 Chrome 并打开 localhost",
             "url": "http://localhost:7456",
-            "webRoot": "${workspaceFolder}"
+            "sourceMaps": true,
+            "userDataDir": "${workspaceRoot}/.vscode/chrome",
+            "diagnosticLogging": false,
+            "pathMapping": {
+                "/preview-scripts/assets": "${workspaceRoot}/temp/quick-scripts/assets",
+                "/": "${workspaceRoot}"
+            }    
         }
+        
     ]
 }
