@@ -99,9 +99,7 @@
         "scene",
         "timeline"
       ]
-    },
-    "window-1529170314041": {},
-    "worker": {}
+    }
   },
   "panels": {
     "builder": {
@@ -109,6 +107,12 @@
       "y": 23,
       "width": 500,
       "height": 721
+    },
+    "project-settings": {
+      "x": 360,
+      "y": 99,
+      "width": 584,
+      "height": 548
     }
   }
 }

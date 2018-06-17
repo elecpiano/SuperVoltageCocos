@@ -833,11 +833,11 @@ var GameBoardController = /** @class */ (function (_super) {
     GameBoardController.prototype.getGifts = function () {
         var gifts = new Array();
         //check for tutorial
-        // // xxx test
-        // this.usePresets = true;
+        // xxx test
+        this.usePresets = true;
         if (this.usePresets) {
             gifts = this.initTutorialGifts();
-            // this.usePresets = false;
+            this.usePresets = false;
         }
         else {
             gifts = new Array();
@@ -884,7 +884,7 @@ var GameBoardController = /** @class */ (function (_super) {
         var newGiftNode = cc.instantiate(this.GiftTemplate);
         this.giftLayer.addChild(newGiftNode);
         var gift = newGiftNode.getComponent(GiftController_1.default);
-        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gift.Init(Enums.GiftType.Lightning, cellToAttach);
         gifts.push(gift);
         return gifts;
     };

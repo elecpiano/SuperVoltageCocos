@@ -937,12 +937,12 @@ export default class GameBoardController extends cc.Component {
         let gifts = new Array<GiftController>();
 
         //check for tutorial
-        // // xxx test
-        // this.usePresets = true;
+        // xxx test
+        this.usePresets = true;
         if (this.usePresets)
         {
             gifts = this.initTutorialGifts();
-            // this.usePresets = false;
+            this.usePresets = false;
         }
         else
         {
@@ -1001,7 +1001,7 @@ export default class GameBoardController extends cc.Component {
         let newGiftNode = cc.instantiate(this.GiftTemplate);
         this.giftLayer.addChild(newGiftNode);
         let gift = newGiftNode.getComponent(GiftController);
-        gift.Init(Enums.GiftType.Bomb, cellToAttach);
+        gift.Init(Enums.GiftType.Lightning, cellToAttach);
         gifts.push(gift);
 
         return gifts;

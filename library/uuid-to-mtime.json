@@ -50,7 +50,7 @@
     "relativePath": "Script"
   },
   "7b81d4e8-ec84-4716-968d-500ac1d78a54": {
-    "asset": 1528951547719,
+    "asset": 1529167505767,
     "meta": 1528189355977,
     "relativePath": "Texture"
   },
@@ -60,8 +60,8 @@
     "relativePath": "Texture/singleColor.png"
   },
   "341b0a2f-c162-4dfe-abad-5fb0a48782ed": {
-    "asset": 1529170320922,
-    "meta": 1529170320942,
+    "asset": 1529217263529,
+    "meta": 1529217263538,
     "relativePath": "Scene/GameBoard.fire"
   },
   "437f4d19-519f-4b95-84e4-634966cff3ec": {
@@ -390,8 +390,8 @@
     "relativePath": "Script/GiftController.ts"
   },
   "f5aa2930-21ac-4cc0-afa5-baafceb2d528": {
-    "asset": 1529170215086,
-    "meta": 1529170217626,
+    "asset": 1529217673858,
+    "meta": 1529217867476,
     "relativePath": "Script/GameBoardController.ts"
   }
 }
