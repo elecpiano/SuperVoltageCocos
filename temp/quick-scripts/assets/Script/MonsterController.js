@@ -452,8 +452,7 @@ var MonsterController = /** @class */ (function (_super) {
             _this.node.parent.removeChild(_this.node);
             // this.node.destroy();
         })));
-        if (this.gameBoard.CellBurntByLigntning == null
-            && this.gameBoard.CurrentGameState != Enums.GameState.Bombing) {
+        if (!this.gameBoard.WeaponUsed) {
             this.gameBoard.CountMonsterKill();
         }
     };
@@ -478,7 +477,7 @@ var MonsterController = /** @class */ (function (_super) {
     MonsterController.prototype.CheckGiftCollision = function () {
         var collisionHappened = false;
         if (this.attachedCell.AttachedGift != null) {
-            this.attachedCell.AttachedGift.MonsterCollide();
+            // this.attachedCell.AttachedGift.MonsterCollide();
             collisionHappened = true;
         }
         return collisionHappened;

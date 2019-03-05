@@ -1,4 +1,6 @@
 {
   "fontsize": 11,
-  "lineheight": 19
+  "lineheight": 19,
+  "aclear": false,
+  "collapse": false
 }

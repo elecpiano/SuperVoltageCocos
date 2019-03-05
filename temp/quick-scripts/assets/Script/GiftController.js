@@ -78,11 +78,11 @@ var GiftController = /** @class */ (function (_super) {
     };
     GiftController.prototype.MonsterCollide = function () {
         if (this.GiftType == Enums.GiftType.Bomb) {
-            // this.attachedCell.gameBoard.ManuallyExplode(this);   
-            this.TriggerAsBomb();
+            this.attachedCell.gameBoard.ManuallyExplode(this);
+            // this.TriggerAsBomb();         
         }
         else if (this.GiftType == Enums.GiftType.Lightning) {
-            this.attachedCell.gameBoard.ManuallyBurn(this.attachedCell);
+            this.attachedCell.gameBoard.ManuallyBurn([this.attachedCell]);
         }
     };
     GiftController.prototype.flicker = function () {
@@ -164,7 +164,7 @@ var GiftController = /** @class */ (function (_super) {
     GiftController.prototype.LongPressFire = function () {
         this.StopLongPressHint();
         if (this.GiftType == Enums.GiftType.Lightning) {
-            this.attachedCell.gameBoard.ManuallyBurn(this.attachedCell);
+            this.attachedCell.gameBoard.ManuallyBurn([this.attachedCell]);
         }
         else if (this.GiftType == Enums.GiftType.Bomb) {
             this.BombTriggered = true;
